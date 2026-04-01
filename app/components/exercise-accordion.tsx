@@ -70,7 +70,7 @@ export default function ExerciseAccordion({ programSlug, dayPlans }: Props) {
         const replacementOpen = swapMenuOpen === idx;
         return (
           <article
-            key={`${activeExercise.name}-${idx}`}
+            key={`day-${activeDay}-ex-${idx}-${activeExercise.name}`}
             className="rounded-2xl border border-white/10 bg-[#111111] p-5 transition-all duration-300 hover:border-[#a3e635]"
           >
             <button

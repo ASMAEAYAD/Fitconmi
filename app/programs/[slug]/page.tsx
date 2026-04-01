@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=1200&q=80",
     endurance:
       "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1200&q=80",
-    "flexibility-mobility":
+    flexibility:
       "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=1200&q=80",
     "body-recomposition":
       "https://images.unsplash.com/photo-1517964603305-11c0f6f66012?w=1200&q=80",

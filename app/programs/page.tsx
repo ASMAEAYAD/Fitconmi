@@ -26,7 +26,7 @@ export default function ProgramsPage() {
       "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=1200&q=80",
     endurance:
       "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1200&q=80",
-    "flexibility-mobility":
+    flexibility:
       "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=1200&q=80",
     "body-recomposition":
       "https://images.unsplash.com/photo-1517964603305-11c0f6f66012?w=1200&q=80",
@@ -46,15 +46,16 @@ export default function ProgramsPage() {
 
         <section className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
           {programs.map((program) => (
-            <article
+            <Link
               key={program.slug}
-              className="group relative overflow-hidden rounded-2xl border border-white/10 transition-all duration-300 hover:-translate-y-1 hover:border-[#a3e635] hover:shadow-[0_0_24px_rgba(163,230,53,0.2)]"
+              href={`/programs/${program.slug}`}
+              className="group relative block min-h-[420px] cursor-pointer overflow-hidden rounded-2xl border border-white/10 transition-all duration-300 hover:-translate-y-1 hover:border-[#a3e635] hover:shadow-[0_0_24px_rgba(163,230,53,0.2)]"
             >
               <img
                 src={programImages[program.slug]}
                 alt={`${program.name} fitness training program`}
                 loading="lazy"
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                className="h-full min-h-[420px] w-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/75 to-black/35" />
               <div className="absolute inset-0 p-6">
@@ -83,14 +84,11 @@ export default function ProgramsPage() {
                   </p>
                 </div>
 
-                <Link
-                  href={`/programs/${program.slug}`}
-                  className="mt-6 inline-flex rounded-full bg-[#a3e635] px-5 py-2 text-sm font-semibold text-[#0a0a0a] transition-all duration-300 hover:shadow-[0_0_20px_rgba(163,230,53,0.4)]"
-                >
+                <span className="mt-6 inline-flex rounded-full bg-[#a3e635] px-5 py-2 text-sm font-semibold text-[#0a0a0a] transition-all duration-300 group-hover:shadow-[0_0_20px_rgba(163,230,53,0.4)]">
                   View Program Details
-                </Link>
+                </span>
               </div>
-            </article>
+            </Link>
           ))}
         </section>
 

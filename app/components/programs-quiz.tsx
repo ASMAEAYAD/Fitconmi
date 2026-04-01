@@ -64,7 +64,7 @@ export default function ProgramsQuiz() {
     if (answers.goal === "Build muscle") return programs.find((p) => p.slug === "muscle-building");
     if (answers.goal === "Get stronger") return programs.find((p) => p.slug === "strength-training");
     if (answers.goal === "Improve stamina") return programs.find((p) => p.slug === "endurance");
-    if (answers.goal === "Move better") return programs.find((p) => p.slug === "flexibility-mobility");
+    if (answers.goal === "Move better") return programs.find((p) => p.slug === "flexibility");
     return programs.find((p) => p.slug === "body-recomposition");
   }, [answers, completed]);
 
