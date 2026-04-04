@@ -1,485 +1,401 @@
 "use client";
-
 import { useState } from "react";
 import Link from "next/link";
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   TYPES & DATA
-───────────────────────────────────────────────────────────────────────────── */
-type Program = {
-  slug: string;
-  name: string;
-  image: string;
-  goal: string;
-  science: string;
-  exercises: string[];
-  duration: string;
-  frequency: string;
-  whyItWorks: string;
-  recommended?: boolean;
-  weeklySchedule: { day: string; focus: string }[];
-};
-
 type Gender = "woman" | "man";
-type Phase = "quiz" | "grid" | "detail";
+type Phase = "quiz" | "grid" | "duration" | "detail";
+type Days = 3 | 4 | 5 | 6;
+type Weeks = 8 | 12 | 16 | 20;
+type DurCfg = { days: Days; weeks: Weeks };
+type Prog = { slug: string; name: string; image: string; goal: string; kw: string[]; rec?: boolean };
 
-const IMGS: Record<string, string> = {
-  "weight-loss": "https://images.unsplash.com/photo-1549570652-97324981a6fd?w=800&q=80",
-  "muscle-building": "https://images.unsplash.com/photo-1599058917212-d750089bc07e?w=800&q=80",
-  "strength-training": "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=800&q=80",
-  endurance: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&q=80",
-  flexibility: "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=800&q=80",
-  "body-recomposition": "https://images.unsplash.com/photo-1517964603305-11c0f6f66012?w=800&q=80",
+const PI: Record<string, string> = {
+  "weight-loss-w": "https://images.unsplash.com/photo-1549570652-97324981a6fd?w=1200&q=80",
+  "weight-loss-m": "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=1200&q=80",
+  "muscle-building-w": "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=1200&q=80",
+  "muscle-building-m": "https://images.unsplash.com/photo-1599058917212-d750089bc07e?w=1200&q=80",
+  "strength-training": "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=1200&q=80",
+  endurance: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1200&q=80",
+  flexibility: "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=1200&q=80",
+  "body-recomposition": "https://images.unsplash.com/photo-1517964603305-11c0f6f66012?w=1200&q=80",
+};
+const progImg = (slug: string, g: Gender) =>
+  PI[`${slug}-${g[0]}`] ?? PI[slug] ?? PI["strength-training"];
+
+const WOMEN: Prog[] = [
+  { slug: "weight-loss", name: "Weight Loss", image: PI["weight-loss-w"], goal: "Lose fat, preserve lean muscle", kw: ["Hip thrusts", "Romanian deadlifts", "Jump rope intervals", "Cable kickbacks"], rec: true },
+  { slug: "body-recomposition", name: "Body Recomposition", image: PI["body-recomposition"], goal: "Lose fat and build lean muscle", kw: ["Full-body circuits", "Compound lifts", "HIIT finishers", "Goblet squats"], rec: true },
+  { slug: "flexibility", name: "Flexibility & Mobility", image: PI["flexibility"], goal: "Improve range of motion & posture", kw: ["Hip flexor stretch", "Pigeon pose", "Thoracic rotations", "Shoulder flows"], rec: true },
+  { slug: "muscle-building", name: "Toning & Muscle", image: PI["muscle-building-w"], goal: "Build lean muscle, improve composition", kw: ["Goblet squats", "DB lunges", "Lat pulldowns", "Incline press"] },
+  { slug: "endurance", name: "Endurance", image: PI["endurance"], goal: "Build cardiovascular fitness", kw: ["Running intervals", "Cycling", "Rowing", "Bodyweight circuits"] },
+  { slug: "strength-training", name: "Strength Training", image: PI["strength-training"], goal: "Build functional strength & confidence", kw: ["Barbell squat", "Deadlift", "Bench press", "Pull-ups"] },
+];
+const MEN: Prog[] = [
+  { slug: "muscle-building", name: "Hypertrophy", image: PI["muscle-building-m"], goal: "Maximise muscle size & definition", kw: ["Bench press", "Barbell rows", "Pull-ups", "Preacher curls"], rec: true },
+  { slug: "strength-training", name: "Strength Training", image: PI["strength-training"], goal: "Build maximum strength across all lifts", kw: ["Squat", "Deadlift", "Bench press", "Power clean"], rec: true },
+  { slug: "body-recomposition", name: "Body Recomposition", image: PI["body-recomposition"], goal: "Build muscle and burn fat together", kw: ["Compound lifts", "Supersets", "HIIT", "Loaded carries"], rec: true },
+  { slug: "weight-loss", name: "Weight Loss", image: PI["weight-loss-m"], goal: "Burn fat, maintain muscle mass", kw: ["Barbell deadlifts", "Weighted squats", "Battle ropes", "Sled push"] },
+  { slug: "endurance", name: "Endurance", image: PI["endurance"], goal: "Build elite cardiovascular capacity", kw: ["Long runs", "Interval sprints", "Cycling", "Rowing"] },
+  { slug: "flexibility", name: "Flexibility & Mobility", image: PI["flexibility"], goal: "Improve performance, eliminate injury", kw: ["Hip mobility drills", "Thoracic rotations", "Ankle mobility", "Dynamic warm-ups"] },
+];
+
+const SCIENCE: Record<string, { p1: string; p2: string; kp: string; kpv: string }> = {
+  "weight-loss": { p1: "Combining resistance training with HIIT creates a powerful EPOC effect — your metabolism stays elevated for up to 36 hours post-workout, burning far more calories than cardio alone.", p2: "Progressive overload preserves and builds lean muscle during a caloric deficit, ensuring the weight you lose is fat, not muscle. This leads to a leaner, stronger physique.", kp: "EPOC Effect", kpv: "Resistance training creates metabolic disturbance that elevates oxygen consumption for up to 36 hours post-workout." },
+  "muscle-building": { p1: "Hypertrophy is driven by mechanical tension, metabolic stress, and muscle damage. The 8–12 rep range at 70–80% 1RM optimally targets all three mechanisms simultaneously.", p2: "Progressive overload — consistently adding weight, reps, or sets over time — is the non-negotiable driver of muscle growth. Without it, adaptation stops.", kp: "Progressive Overload", kpv: "Systematically increasing training stimulus forces continuous muscle adaptation — the foundation of every successful program." },
+  "strength-training": { p1: "Maximal strength is primarily a neural adaptation. Training at 85%+ of your 1RM teaches your nervous system to recruit more motor units simultaneously — producing force increases before muscles even grow.", p2: "Structured periodisation — cycling between volume, intensity, and deload phases — prevents plateaus and continuously drives neuromuscular adaptation.", kp: "Neural Adaptation", kpv: "Before muscle grows, your nervous system learns to recruit more motor units — delivering measurable strength gains within 2–3 weeks." },
+  endurance: { p1: "Zone 2 training (60–70% max HR) is the most efficient way to build your aerobic base. It maximises mitochondrial density and fat oxidation — the engine behind sustainable performance.", p2: "Lactate threshold intervals train your body to sustain higher intensities for longer periods, directly translating to faster race times and better endurance capacity.", kp: "Zone 2 Training", kpv: "Training at 60–70% max heart rate maximises mitochondrial density and fat oxidation — the foundation of all endurance performance." },
+  flexibility: { p1: "PNF (Proprioceptive Neuromuscular Facilitation) stretching increases range of motion 10–15% faster than static stretching by exploiting the muscle's inhibitory reflex mechanism.", p2: "Dynamic mobility training pre-workout increases power output by 5–8% by improving neuromuscular readiness and joint range — making every training session more effective.", kp: "PNF Stretching", kpv: "PNF techniques exploit neurological reflexes to increase ROM 10–15% faster than traditional static stretching protocols." },
+  "body-recomposition": { p1: "Body recomposition — losing fat and gaining muscle simultaneously — is achievable at caloric maintenance when paired with high protein intake (2+ g/kg) and consistent resistance training.", p2: "Resistance training sends the anabolic signal to preserve and build muscle, while the caloric balance ensures fat stores are used for energy. The result: simultaneous body composition improvement.", kp: "Protein-Sparing Effect", kpv: "High protein intake combined with resistance training signals the body to spare muscle while using fat for fuel — the core of recomposition." },
 };
 
-const WOMEN: Program[] = [
-  {
-    slug: "weight-loss", name: "Weight Loss", image: IMGS["weight-loss"],
-    goal: "Lose fat while preserving lean muscle",
-    science: "Combines HIIT and resistance training to maximise EPOC (excess post-exercise oxygen consumption), keeping your metabolism elevated long after the session ends.",
-    exercises: ["Hip thrusts", "Romanian deadlifts", "Cable kickbacks", "Jump rope intervals", "Plank variations"],
-    duration: "12 weeks", frequency: "4x / week", recommended: true,
-    whyItWorks: "Women respond better to mixed-modality training for fat loss than cardio alone. The resistance + interval combination preserves muscle while accelerating fat burn.",
-    weeklySchedule: [
-      { day: "Monday", focus: "HIIT + lower resistance" },
-      { day: "Tuesday", focus: "Active recovery / mobility" },
-      { day: "Wednesday", focus: "Full-body resistance" },
-      { day: "Thursday", focus: "Rest" },
-      { day: "Friday", focus: "HIIT circuits" },
-      { day: "Saturday", focus: "Light cardio / walk" },
-      { day: "Sunday", focus: "Rest" },
-    ],
-  },
-  {
-    slug: "body-recomposition", name: "Body Recomposition", image: IMGS["body-recomposition"],
-    goal: "Lose fat and build lean muscle simultaneously",
-    science: "Caloric balance at maintenance with high protein (2 g/kg body weight) triggers recomposition — your body uses dietary protein to build muscle while pulling energy from fat stores.",
-    exercises: ["Full-body circuits", "Compound lifts", "HIIT finishers", "Goblet squats", "Cable rows"],
-    duration: "20 weeks", frequency: "4x / week", recommended: true,
-    whyItWorks: "Recomposition works best for women newer to consistent training. High-protein nutrition protects lean tissue while the caloric structure drives sustainable fat loss.",
-    weeklySchedule: [
-      { day: "Monday", focus: "Full-body strength A" },
-      { day: "Tuesday", focus: "HIIT conditioning" },
-      { day: "Wednesday", focus: "Rest / walk" },
-      { day: "Thursday", focus: "Full-body strength B" },
-      { day: "Friday", focus: "HIIT finisher" },
-      { day: "Saturday", focus: "Active recovery" },
-      { day: "Sunday", focus: "Rest" },
-    ],
-  },
-  {
-    slug: "flexibility", name: "Flexibility & Mobility", image: IMGS["flexibility"],
-    goal: "Improve range of motion, reduce injury risk, enhance posture",
-    science: "PNF stretching and yoga-based mobility increase fascia elasticity and joint range, improving both performance and injury resilience.",
-    exercises: ["Hip flexor stretch", "Pigeon pose", "Thoracic rotations", "Hamstring stretches", "Shoulder mobility flows"],
-    duration: "8 weeks", frequency: "5x / week", recommended: true,
-    whyItWorks: "Consistent mobility work rewires movement patterns, reduces chronic tension, and builds the body awareness needed to stay strong and confident in everyday life.",
-    weeklySchedule: [
-      { day: "Monday", focus: "Hips + lower body mobility" },
-      { day: "Tuesday", focus: "Shoulders + thoracic spine" },
-      { day: "Wednesday", focus: "Full-body flow" },
-      { day: "Thursday", focus: "Restorative / breathwork" },
-      { day: "Friday", focus: "Dynamic mobility session" },
-      { day: "Saturday", focus: "Optional gentle yoga" },
-      { day: "Sunday", focus: "Rest" },
-    ],
-  },
-  {
-    slug: "muscle-building", name: "Toning & Muscle Building", image: IMGS["muscle-building"],
-    goal: "Build lean muscle and improve body composition",
-    science: "Progressive overload with moderate weights (65–75 % 1RM) triggers hypertrophy without excessive bulk, sculpting a strong and defined physique.",
-    exercises: ["Goblet squats", "Dumbbell lunges", "Lat pulldowns", "Dumbbell rows", "Incline press"],
-    duration: "16 weeks", frequency: "4x / week",
-    whyItWorks: "Women have lower testosterone but higher estrogen, which supports muscle endurance and recovery. This program leverages your hormonal environment for sustainable, confident gains.",
-    weeklySchedule: [
-      { day: "Monday", focus: "Upper push (chest, shoulders, triceps)" },
-      { day: "Tuesday", focus: "Lower body (quads, glutes)" },
-      { day: "Wednesday", focus: "Rest / active recovery" },
-      { day: "Thursday", focus: "Upper pull (back, biceps)" },
-      { day: "Friday", focus: "Full-body compound session" },
-      { day: "Saturday", focus: "Light cardio / mobility" },
-      { day: "Sunday", focus: "Rest" },
-    ],
-  },
-  {
-    slug: "endurance", name: "Endurance", image: IMGS["endurance"],
-    goal: "Build cardiovascular fitness and sustainable stamina",
-    science: "Zone 2 training improves mitochondrial density, meaning your cells generate more energy per oxygen molecule — giving you lasting energy all day.",
-    exercises: ["Running intervals", "Cycling", "Rowing", "Stair climber", "Bodyweight circuits"],
-    duration: "12 weeks", frequency: "5x / week",
-    whyItWorks: "A structured aerobic base makes every other workout more effective. As your engine grows stronger, recovery improves and everyday fatigue drops.",
-    weeklySchedule: [
-      { day: "Monday", focus: "Zone 2 steady-state cardio" },
-      { day: "Tuesday", focus: "Bodyweight strength circuit" },
-      { day: "Wednesday", focus: "Interval training" },
-      { day: "Thursday", focus: "Cross-training (cycling / rowing)" },
-      { day: "Friday", focus: "Long easy run or bike" },
-      { day: "Saturday", focus: "Active recovery" },
-      { day: "Sunday", focus: "Rest" },
-    ],
-  },
-  {
-    slug: "strength-training", name: "Strength Training", image: IMGS["strength-training"],
-    goal: "Build functional strength and unshakeable confidence",
-    science: "Neuromuscular adaptation through compound movements improves strength without significant size increase, while directly increasing bone density.",
-    exercises: ["Barbell squat", "Deadlift", "Bench press", "Overhead press", "Pull-ups"],
-    duration: "16 weeks", frequency: "3x / week",
-    whyItWorks: "Strength training increases bone density — crucial for women's long-term health and injury prevention. Lifting heavy is one of the most empowering habits you can build.",
-    weeklySchedule: [
-      { day: "Monday", focus: "Squat focus + accessories" },
-      { day: "Tuesday", focus: "Rest / mobility" },
-      { day: "Wednesday", focus: "Bench press + upper pull" },
-      { day: "Thursday", focus: "Rest" },
-      { day: "Friday", focus: "Deadlift + posterior chain" },
-      { day: "Saturday", focus: "Optional light cardio" },
-      { day: "Sunday", focus: "Rest" },
-    ],
-  },
-];
+const SCH_BASE: Record<string, string[]> = {
+  "weight-loss": ["Full Body + Cardio", "HIIT Circuit", "Lower Body + Core", "Active Recovery", "Full Body Strength", "Cardio + Mobility"],
+  "muscle-building": ["Upper Push", "Lower Body", "Upper Pull", "Full Body", "Push + Shoulders", "Pull + Core"],
+  "strength-training": ["Squat Focus", "Bench + Upper", "Deadlift + Posterior", "Overhead + Accessory", "Volume Day", "Conditioning"],
+  endurance: ["Zone 2 Base", "Strength Maintenance", "Tempo Intervals", "Cross Training", "Long Session", "Active Recovery"],
+  flexibility: ["Hip + Lower Flow", "Thoracic + Shoulder", "Full Body Dynamic", "Restorative", "Active Flexibility", "Recovery Mobility"],
+  "body-recomposition": ["Full Body Strength A", "HIIT", "Full Body Strength B", "HIIT Finisher", "Upper Hypertrophy", "Lower + Core"],
+};
+const W_TWEAK: Record<number, string> = { 1: " (Glute Focus)", 2: " (Core Emphasis)", 4: " (Glute + Core)" };
+const M_TWEAK: Record<number, string> = { 0: " (Strength)", 2: " (Power)", 4: " (Hypertrophy)" };
+function buildSch(slug: string, g: Gender, days: Days) {
+  const base = SCH_BASE[slug] ?? SCH_BASE["weight-loss"];
+  const tweak = g === "woman" ? W_TWEAK : M_TWEAK;
+  const out: string[] = [];
+  for (let i = 0; i < days; i++) {
+    const label = base[i] ?? base[i % base.length];
+    out.push(label + (tweak[i] ?? ""));
+  }
+  return out;
+}
 
-const MEN: Program[] = [
-  {
-    slug: "muscle-building", name: "Hypertrophy", image: IMGS["muscle-building"],
-    goal: "Maximise muscle size and definition",
-    science: "The 8–12 rep range at 70–80 % 1RM with progressive overload is the optimal stimulus for hypertrophy, triggering satellite cell activation and peak muscle protein synthesis.",
-    exercises: ["Bench press", "Incline dumbbell press", "Barbell rows", "Pull-ups", "Preacher curls", "Tricep dips"],
-    duration: "16 weeks", frequency: "5x / week", recommended: true,
-    whyItWorks: "Male testosterone levels directly support muscle protein synthesis. This program is engineered to exploit that hormonal advantage for maximum size and strength gains.",
-    weeklySchedule: [
-      { day: "Monday", focus: "Chest + triceps (push)" },
-      { day: "Tuesday", focus: "Back + biceps (pull)" },
-      { day: "Wednesday", focus: "Legs — quads, glutes, hamstrings" },
-      { day: "Thursday", focus: "Shoulders + traps" },
-      { day: "Friday", focus: "Arms + lagging muscle groups" },
-      { day: "Saturday", focus: "Rest" },
-      { day: "Sunday", focus: "Rest" },
-    ],
-  },
-  {
-    slug: "strength-training", name: "Strength Training", image: IMGS["strength-training"],
-    goal: "Build maximum strength across all major lifts",
-    science: "Neural adaptations from the 3–6 rep range at 85 %+ 1RM increase maximal force output faster than hypertrophy training. Periodisation continuously prevents plateaus.",
-    exercises: ["Squat", "Deadlift", "Bench press", "Overhead press", "Power clean"],
-    duration: "20 weeks", frequency: "4x / week", recommended: true,
-    whyItWorks: "Periodisation continuously challenges the nervous system, driving adaptation cycles that keep strength climbing throughout the programme — no plateaus, no ceiling.",
-    weeklySchedule: [
-      { day: "Monday", focus: "Squat day — heavy + accessory" },
-      { day: "Tuesday", focus: "Bench press + upper back" },
-      { day: "Wednesday", focus: "Rest / mobility" },
-      { day: "Thursday", focus: "Deadlift + posterior chain" },
-      { day: "Friday", focus: "Overhead press + weak-point work" },
-      { day: "Saturday", focus: "Optional conditioning" },
-      { day: "Sunday", focus: "Rest" },
-    ],
-  },
-  {
-    slug: "body-recomposition", name: "Body Recomposition", image: IMGS["body-recomposition"],
-    goal: "Build muscle and burn fat simultaneously",
-    science: "High protein (2.2 g/kg) combined with caloric cycling optimises the hormonal environment for simultaneous fat loss and muscle gain — no traditional bulk-cut needed.",
-    exercises: ["Compound lifts", "Supersets", "HIIT", "Loaded carries", "Cable work"],
-    duration: "20 weeks", frequency: "5x / week", recommended: true,
-    whyItWorks: "Caloric cycling keeps metabolism high while protein preserves and builds muscle. The result: a harder, leaner physique without the time cost of a traditional bulk-cut cycle.",
-    weeklySchedule: [
-      { day: "Monday", focus: "Upper push (strength emphasis)" },
-      { day: "Tuesday", focus: "Lower body (strength emphasis)" },
-      { day: "Wednesday", focus: "Metabolic HIIT" },
-      { day: "Thursday", focus: "Upper pull (hypertrophy)" },
-      { day: "Friday", focus: "Full-body HIIT finisher" },
-      { day: "Saturday", focus: "Active recovery" },
-      { day: "Sunday", focus: "Rest" },
-    ],
-  },
-  {
-    slug: "weight-loss", name: "Weight Loss", image: IMGS["weight-loss"],
-    goal: "Burn fat while maintaining muscle mass",
-    science: "Combines strength training with metabolic conditioning to preserve testosterone levels and muscle while creating a consistent caloric deficit.",
-    exercises: ["Barbell deadlifts", "Weighted squats", "Battle ropes", "Sled push", "Kettlebell swings"],
-    duration: "12 weeks", frequency: "4x / week",
-    whyItWorks: "Men's higher baseline muscle mass means resistance training burns significantly more calories at rest. This programme builds on that advantage to accelerate fat loss.",
-    weeklySchedule: [
-      { day: "Monday", focus: "Strength circuit A" },
-      { day: "Tuesday", focus: "Metabolic conditioning" },
-      { day: "Wednesday", focus: "Rest" },
-      { day: "Thursday", focus: "Strength circuit B" },
-      { day: "Friday", focus: "HIIT + finisher" },
-      { day: "Saturday", focus: "Active recovery" },
-      { day: "Sunday", focus: "Rest" },
-    ],
-  },
-  {
-    slug: "endurance", name: "Endurance", image: IMGS["endurance"],
-    goal: "Build elite cardiovascular capacity",
-    science: "VO₂ max training and lactate threshold work improve oxygen utilisation and sustained power output, transforming you into a true endurance athlete.",
-    exercises: ["Long runs", "Interval sprints", "Cycling", "Swimming", "Rowing"],
-    duration: "16 weeks", frequency: "5x / week",
-    whyItWorks: "Structured aerobic periodisation pushes your VO₂ max higher each block. Combined with lactate threshold work, you'll dominate at higher intensities for longer.",
-    weeklySchedule: [
-      { day: "Monday", focus: "Easy base run" },
-      { day: "Tuesday", focus: "Interval sprints" },
-      { day: "Wednesday", focus: "Cross-training (cycling / swim)" },
-      { day: "Thursday", focus: "Tempo run" },
-      { day: "Friday", focus: "Long slow distance" },
-      { day: "Saturday", focus: "Active recovery" },
-      { day: "Sunday", focus: "Rest" },
-    ],
-  },
-  {
-    slug: "flexibility", name: "Flexibility & Mobility", image: IMGS["flexibility"],
-    goal: "Improve athletic performance and eliminate injury risk",
-    science: "Dynamic stretching pre-workout increases power output by 5–8 %. Consistent mobility work removes the hidden limiters on your strength and performance ceiling.",
-    exercises: ["Hip mobility drills", "Thoracic spine rotations", "Ankle mobility", "Foam rolling", "Dynamic warm-ups"],
-    duration: "8 weeks", frequency: "Daily",
-    whyItWorks: "Athletes who move better, lift better. Expanding your range of motion directly improves strength mechanics and unlocks power you didn't know you had.",
-    weeklySchedule: [
-      { day: "Monday", focus: "Hip flexors + glutes" },
-      { day: "Tuesday", focus: "Thoracic spine + shoulders" },
-      { day: "Wednesday", focus: "Ankle + knee mobility" },
-      { day: "Thursday", focus: "Full lower-body flow" },
-      { day: "Friday", focus: "Dynamic warm-up protocol" },
-      { day: "Saturday", focus: "Foam roll + restorative" },
-      { day: "Sunday", focus: "Breathwork + light stretch" },
-    ],
-  },
-];
+const EX_IMGS = {
+  sq: "https://images.unsplash.com/photo-1567598508481-65985588e295?w=400&q=80",
+  dl: "https://images.unsplash.com/photo-1598971639058-fab3c3109a37?w=400&q=80",
+  pu: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&q=80",
+  rn: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=400&q=80",
+  ht: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400&q=80",
+  pl: "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=400&q=80",
+};
+type Ex = { name: string; muscle: string; sets: string; sci: string; img: string };
+const EXERCISES: Record<string, Ex[]> = {
+  "weight-loss-w": [
+    { name: "Hip Thrust", muscle: "Glutes", sets: "4×12", sci: "Peak glute activation while preserving muscle in a deficit.", img: EX_IMGS.ht },
+    { name: "Romanian Deadlift", muscle: "Hamstrings, Glutes", sets: "3×10", sci: "Posterior chain strength preserves lean mass during fat loss.", img: EX_IMGS.dl },
+    { name: "Jump Rope Intervals", muscle: "Cardiovascular", sets: "4×90s", sci: "Creates EPOC — metabolism stays elevated post-workout.", img: EX_IMGS.rn },
+    { name: "Push-Up", muscle: "Chest, Triceps", sets: "3×15", sci: "Upper-body volume with zero equipment needed.", img: EX_IMGS.pu },
+    { name: "Plank Hold", muscle: "Core", sets: "3×45s", sci: "Builds anti-extension core strength for compound lift safety.", img: EX_IMGS.pl },
+    { name: "Goblet Squat", muscle: "Quads, Glutes", sets: "4×12", sci: "Maximises caloric expenditure via large muscle recruitment.", img: EX_IMGS.sq },
+  ],
+  "weight-loss-m": [
+    { name: "Barbell Deadlift", muscle: "Full Posterior Chain", sets: "4×6", sci: "Highest testosterone response — key for muscle retention in deficit.", img: EX_IMGS.dl },
+    { name: "Back Squat", muscle: "Quads, Glutes", sets: "4×8", sci: "Largest muscle group activation = most calories per set.", img: EX_IMGS.sq },
+    { name: "Sprint Intervals", muscle: "Cardiovascular", sets: "8×30s", sci: "HIIT creates EPOC lasting 24–36h after the session.", img: EX_IMGS.rn },
+    { name: "Bench Press", muscle: "Chest, Triceps", sets: "4×10", sci: "Preserves upper-body muscle mass during caloric deficit.", img: EX_IMGS.pu },
+    { name: "Plank Hold", muscle: "Core", sets: "3×60s", sci: "Core stability supports heavy compound performance.", img: EX_IMGS.pl },
+    { name: "Hip Thrust", muscle: "Glutes", sets: "3×10", sci: "Glute strength transfers directly to deadlift lockout power.", img: EX_IMGS.ht },
+  ],
+};
+function getExercises(slug: string, g: Gender): Ex[] {
+  const key = `${slug}-${g[0]}`;
+  if (EXERCISES[key]) return EXERCISES[key];
+  return [
+    { name: "Back Squat", muscle: "Quads, Glutes, Core", sets: "4×8–10", sci: "The king of compound movements — activates 70%+ of total musculature.", img: EX_IMGS.sq },
+    { name: "Deadlift", muscle: "Posterior Chain", sets: "4×6–8", sci: "Highest hormonal adaptation trigger of any single exercise.", img: EX_IMGS.dl },
+    { name: "Push-Up / Bench Press", muscle: "Chest, Shoulders, Triceps", sets: "3×12–15", sci: "Horizontal push pattern essential for upper-body symmetry.", img: EX_IMGS.pu },
+    { name: "Running Intervals", muscle: "Cardiovascular", sets: "8×30s sprint", sci: "HIIT intervals create caloric afterburn for 24–36 hours.", img: EX_IMGS.rn },
+    { name: "Hip Thrust", muscle: "Glutes, Hamstrings", sets: "4×10–12", sci: "Peak glute activation outperforms squats for posterior development.", img: EX_IMGS.ht },
+    { name: "Plank Variations", muscle: "Core", sets: "3×45–60s", sci: "Anti-extension training more effective than crunches for stability.", img: EX_IMGS.pl },
+  ];
+}
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   ROOT COMPONENT
-───────────────────────────────────────────────────────────────────────────── */
+const MILE_W = ["💪 Adaptation — your body is calibrating. Soreness is growth.", "🔥 Progression — energy is up, strength is climbing, clothes fit differently.", "✨ Transformation — visible results, unshakeable habits, unstoppable confidence."];
+const MILE_M = ["⚡ Adaptation — neuromuscular learning begins. CNS is calibrating.", "📈 Progression — strength numbers climb. Performance metrics visibly improve.", "🏆 Transformation — body composition shifts. Peak performance unlocked."];
+const WEEK_LABELS: Record<Weeks, string> = { 8: "Build the habit", 12: "See real results", 16: "Transform your body", 20: "Elite level" };
+
+const NUTR: Record<string, [string, string, string]> = {
+  "weight-loss-w": ["Eat at a 10–15% caloric deficit — aggressive restriction kills muscle and motivation.", "Target 1.6 g protein per kg bodyweight to preserve lean tissue throughout.", "Time carbs around training sessions for optimal energy and recovery."],
+  "weight-loss-m": ["Eat at a 15–20% deficit while keeping protein at 2.2 g/kg to maintain muscle mass.", "Keep training volume high — muscle retention in a deficit requires continued mechanical stimulus.", "Cycle carbs: higher on training days, lower on rest days for optimal body composition."],
+  default: ["Protein is the foundation: women target 1.6 g/kg, men target 2.2 g/kg daily.", "Sleep 7–9 hours — most hormonal adaptation and muscle repair happens during deep sleep.", "Hydration: even 2% dehydration reduces performance by 5%. Stay ahead of thirst."],
+};
+function getNutr(slug: string, g: Gender): [string, string, string] {
+  return NUTR[`${slug}-${g[0]}`] ?? NUTR.default;
+}
+
+/* ── Root ────────────────────────────────────────────────────── */
 export default function GenderPrograms() {
   const [gender, setGender] = useState<Gender | null>(null);
   const [phase, setPhase] = useState<Phase>("quiz");
-  const [selected, setSelected] = useState<Program | null>(null);
+  const [selected, setSelected] = useState<Prog | null>(null);
+  const [dur, setDur] = useState<DurCfg | null>(null);
   const [fading, setFading] = useState(false);
 
-  function go(fn: () => void) {
-    setFading(true);
-    setTimeout(() => { fn(); setFading(false); }, 380);
-  }
-
-  const programs = gender === "woman" ? WOMEN : gender === "man" ? MEN : [];
+  const go = (fn: () => void) => { setFading(true); setTimeout(() => { fn(); setFading(false); }, 360); };
+  const progs = gender === "woman" ? WOMEN : MEN;
 
   return (
-    <div style={{ opacity: fading ? 0 : 1, transition: "opacity 0.38s ease" }}>
-      {phase === "quiz" && (
-        <GenderQuiz
-          onChoose={(g) => go(() => { setGender(g); setPhase("grid"); })}
-        />
-      )}
-      {phase === "grid" && gender && (
-        <ProgramsGrid
-          programs={programs}
-          gender={gender}
-          onSelect={(p) => go(() => { setSelected(p); setPhase("detail"); })}
-          onBack={() => go(() => { setGender(null); setPhase("quiz"); })}
-        />
-      )}
-      {phase === "detail" && selected && gender && (
-        <ProgramDetail
-          program={selected}
-          gender={gender}
-          onBack={() => go(() => { setSelected(null); setPhase("grid"); })}
-        />
-      )}
+    <div style={{ opacity: fading ? 0 : 1, transition: "opacity 0.36s ease" }}>
+      {phase === "quiz" && <GenderQuiz onChoose={(g) => go(() => { setGender(g); setPhase("grid"); })} />}
+      {phase === "grid" && gender && <ProgramsGrid progs={progs} gender={gender} onSelect={(p) => go(() => { setSelected(p); setPhase("duration"); })} onBack={() => go(() => { setGender(null); setPhase("quiz"); })} />}
+      {phase === "duration" && selected && gender && <DurationSelector gender={gender} prog={selected} onConfirm={(d) => go(() => { setDur(d); setPhase("detail"); })} onBack={() => go(() => setPhase("grid"))} />}
+      {phase === "detail" && selected && gender && dur && <ProgramDetail prog={selected} gender={gender} dur={dur} onBack={() => go(() => { setDur(null); setPhase("grid"); })} />}
     </div>
   );
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   GENDER QUIZ
-───────────────────────────────────────────────────────────────────────────── */
+/* ── Gender Quiz ─────────────────────────────────────────────── */
 function GenderQuiz({ onChoose }: { onChoose: (g: Gender) => void }) {
   return (
     <section aria-label="Gender selection" style={{ display: "flex", flexDirection: "column", minHeight: "calc(100vh - 72px)" }}>
       <div style={{ textAlign: "center", padding: "3rem 1rem 2rem" }}>
-        <p style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.25em", textTransform: "uppercase", color: "#a3e635", margin: 0 }}>
-          Step 1 of 2 — Personalise Your Plan
-        </p>
-        <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(2.2rem, 6vw, 5rem)", color: "#fff", margin: "0.4rem 0 0", letterSpacing: "0.05em", lineHeight: 1 }}>
-          WHO ARE YOU TRAINING FOR?
-        </h1>
-        <p style={{ color: "#9ca3af", marginTop: "0.75rem" }}>
-          Choose to see programs personalised for your goals
-        </p>
+        <p style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.25em", textTransform: "uppercase", color: "#a3e635", margin: 0 }}>Step 1 of 4 — Personalise Your Plan</p>
+        <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(2.2rem, 7vw, 5rem)", color: "#fff", margin: "0.4rem 0 0", letterSpacing: "0.05em", lineHeight: 1 }}>WHO ARE YOU TRAINING FOR?</h1>
+        <p style={{ color: "#9ca3af", marginTop: "0.75rem" }}>Choose to see programs personalised for your goals</p>
       </div>
-      <div className="gq-grid" style={{ display: "grid", gridTemplateColumns: "1fr", flex: 1, minHeight: "70vh" }}>
-        <HeroCard image="https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&q=80" title="I'm a Woman" subtitle="Programs designed for female physiology" onClick={() => onChoose("woman")} ariaLabel="Select women's programs" />
-        <HeroCard image="https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=800&q=80" title="I'm a Man" subtitle="Programs built for male performance" onClick={() => onChoose("man")} ariaLabel="Select men's programs" />
+      <div className="gq" style={{ display: "grid", gridTemplateColumns: "1fr", flex: 1, minHeight: "70vh" }}>
+        <HeroCard image="https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&q=80" title="I'm a Woman" sub="Programs designed for female physiology" onClick={() => onChoose("woman")} aria="Select women's programs" />
+        <HeroCard image="https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=800&q=80" title="I'm a Man" sub="Programs built for male performance" onClick={() => onChoose("man")} aria="Select men's programs" />
       </div>
-      <style>{`@media(min-width:768px){.gq-grid{grid-template-columns:1fr 1fr!important}}`}</style>
+      <style>{`@media(min-width:768px){.gq{grid-template-columns:1fr 1fr!important}}`}</style>
     </section>
   );
 }
-
-function HeroCard({ image, title, subtitle, onClick, ariaLabel }: { image: string; title: string; subtitle: string; onClick: () => void; ariaLabel: string }) {
+function HeroCard({ image, title, sub, onClick, aria }: { image: string; title: string; sub: string; onClick: () => void; aria: string }) {
   const [hov, setHov] = useState(false);
   return (
-    <button onClick={onClick} aria-label={ariaLabel} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ position: "relative", overflow: "hidden", cursor: "pointer", background: "none", border: "none", padding: 0, display: "block", width: "100%", minHeight: "70vh", boxShadow: hov ? "inset 0 0 0 3px rgba(163,230,53,.7),0 0 60px rgba(163,230,53,.2)" : "inset 0 0 0 0 transparent", transition: "box-shadow 0.4s ease" }}>
-      <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${image})`, backgroundSize: "cover", backgroundPosition: "center", transform: hov ? "scale(1.04)" : "scale(1)", transition: "transform 0.6s ease" }} aria-hidden="true" />
-      <div style={{ position: "absolute", inset: 0, background: hov ? "linear-gradient(to top,rgba(0,0,0,.82) 0%,rgba(0,0,0,.4) 60%,rgba(0,0,0,.18) 100%)" : "linear-gradient(to top,rgba(0,0,0,.9) 0%,rgba(0,0,0,.6) 60%,rgba(0,0,0,.3) 100%)", transition: "background 0.4s ease" }} aria-hidden="true" />
-      <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at 50% 100%,rgba(163,230,53,.12) 0%,transparent 70%)", opacity: hov ? 1 : 0, transition: "opacity 0.4s ease" }} aria-hidden="true" />
+    <button onClick={onClick} aria-label={aria} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={{ position: "relative", overflow: "hidden", cursor: "pointer", background: "none", border: "none", padding: 0, width: "100%", minHeight: "70vh", boxShadow: hov ? "inset 0 0 0 3px rgba(163,230,53,.7)" : "none", transition: "box-shadow 0.4s ease" }}>
+      <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${image})`, backgroundSize: "cover", backgroundPosition: "center", transform: hov ? "scale(1.04)" : "scale(1)", transition: "transform 0.6s ease" }} />
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top,rgba(0,0,0,.88) 0%,rgba(0,0,0,.5) 60%,rgba(0,0,0,.2) 100%)", transition: "background 0.4s ease" }} />
       <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", minHeight: "70vh", padding: "3rem 2rem", textAlign: "center" }}>
-        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(2rem, 4vw, 3.5rem)", color: hov ? "#a3e635" : "#fff", margin: 0, letterSpacing: "0.05em", transition: "color 0.4s ease", lineHeight: 1 }}>{title}</h2>
-        <p style={{ color: hov ? "rgba(255,255,255,.9)" : "rgba(255,255,255,.6)", marginTop: "0.75rem", maxWidth: "20rem", transition: "color 0.4s ease" }}>{subtitle}</p>
-        <span style={{ display: "inline-flex", alignItems: "center", marginTop: "1.5rem", background: hov ? "#a3e635" : "rgba(163,230,53,.15)", color: hov ? "#0a0a0a" : "#a3e635", border: "1px solid rgba(163,230,53,.5)", borderRadius: "9999px", padding: "0.6rem 1.5rem", fontSize: "0.875rem", fontWeight: 700, transition: "all 0.35s ease", boxShadow: hov ? "0 0 24px rgba(163,230,53,.4)" : "none" }}>
+        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(2rem, 4vw, 3.5rem)", color: hov ? "#a3e635" : "#fff", margin: 0, letterSpacing: "0.05em", transition: "color 0.4s ease" }}>{title}</h2>
+        <p style={{ color: "rgba(255,255,255,.65)", marginTop: "0.75rem" }}>{sub}</p>
+        <span style={{ display: "inline-flex", marginTop: "1.5rem", background: hov ? "#a3e635" : "rgba(163,230,53,.15)", color: hov ? "#0a0a0a" : "#a3e635", border: "1px solid rgba(163,230,53,.5)", borderRadius: "9999px", padding: "0.6rem 1.5rem", fontSize: "0.875rem", fontWeight: 700, transition: "all 0.35s ease" }}>
           {hov ? "Let's go →" : "Choose"}
         </span>
-        <div style={{ marginTop: "1.25rem", width: 8, height: 8, borderRadius: "50%", background: "#a3e635", animation: "pdot 1.8s ease-in-out infinite", opacity: hov ? 0 : 0.8, transition: "opacity 0.3s ease" }} aria-hidden="true" />
       </div>
-      <style>{`@keyframes pdot{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.6);opacity:.3}}`}</style>
     </button>
   );
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   PROGRAMS GRID
-───────────────────────────────────────────────────────────────────────────── */
-function ProgramsGrid({ programs, gender, onSelect, onBack }: { programs: Program[]; gender: Gender; onSelect: (p: Program) => void; onBack: () => void }) {
+/* ── Programs Grid ───────────────────────────────────────────── */
+function ProgramsGrid({ progs, gender, onSelect, onBack }: { progs: Prog[]; gender: Gender; onSelect: (p: Prog) => void; onBack: () => void }) {
   const isW = gender === "woman";
   return (
     <section aria-label={`Programs for ${isW ? "women" : "men"}`} style={{ maxWidth: "90rem", margin: "0 auto", padding: "4rem 1.5rem", width: "100%" }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", marginBottom: "3rem" }}>
         <div>
-          <p style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "#a3e635", margin: 0 }}>Personalised for {isW ? "Women" : "Men"}</p>
-          <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(2.2rem, 5vw, 4rem)", color: "#fff", margin: "0.25rem 0 0.5rem", letterSpacing: "0.05em", lineHeight: 1 }}>
-            {isW ? "Your Strength Journey Starts Here" : "Dominate Your Training"}
-          </h1>
-          <p style={{ color: "#9ca3af", maxWidth: "36rem", margin: 0, fontSize: "0.95rem" }}>
-            {isW ? "Science-backed programs designed around female physiology — strong, confident, and sustainable." : "Performance-engineered programs built to maximise power, muscle, and results."}
-            {" "}<span style={{ color: "rgba(255,255,255,.4)" }}>⭐ = top picks.</span>
-          </p>
+          <p style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "#a3e635", margin: 0 }}>Step 2 — Choose Your Program</p>
+          <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(2rem, 5vw, 4rem)", color: "#fff", margin: "0.25rem 0 0.5rem", letterSpacing: "0.05em", lineHeight: 1 }}>{isW ? "Your Strength Journey Starts Here" : "Dominate Your Training"}</h1>
+          <p style={{ color: "#9ca3af", maxWidth: "36rem", margin: 0, fontSize: "0.9rem" }}>{isW ? "Science-backed programs for female physiology — strong, confident, sustainable." : "Performance-engineered programs to maximise power, muscle, and results."}</p>
         </div>
-        <GhostButton onClick={onBack} ariaLabel="Go back to gender selection">← Change</GhostButton>
+        <GhostBtn onClick={onBack} aria="Back to gender selection">← Change</GhostBtn>
       </div>
       <div className="pg">
-        {programs.map(p => <ProgramCard key={p.slug} program={p} onSelect={onSelect} />)}
+        {progs.map(p => <ProgCard key={p.slug} prog={p} onSelect={onSelect} />)}
       </div>
       <style>{`.pg{display:grid;grid-template-columns:1fr;gap:1.5rem}@media(min-width:640px){.pg{grid-template-columns:repeat(2,1fr)}}@media(min-width:1024px){.pg{grid-template-columns:repeat(3,1fr)}}`}</style>
     </section>
   );
 }
-
-function ProgramCard({ program, onSelect }: { program: Program; onSelect: (p: Program) => void }) {
+function ProgCard({ prog, onSelect }: { prog: Prog; onSelect: (p: Prog) => void }) {
   const [hov, setHov] = useState(false);
   return (
-    <article onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ borderRadius: "1rem", overflow: "hidden", border: hov ? "1px solid rgba(163,230,53,.55)" : "1px solid rgba(255,255,255,.1)", boxShadow: hov ? "0 0 36px rgba(163,230,53,.18)" : "none", transform: hov ? "translateY(-4px)" : "translateY(0)", transition: "all 0.4s ease", background: "#111", display: "flex", flexDirection: "column" }}>
+    <article onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={{ borderRadius: "1rem", overflow: "hidden", border: hov ? "1px solid rgba(163,230,53,.55)" : "1px solid rgba(255,255,255,.1)", boxShadow: hov ? "0 0 36px rgba(163,230,53,.18)" : "none", transform: hov ? "translateY(-4px)" : "none", transition: "all 0.4s ease", background: "#111", display: "flex", flexDirection: "column" }}>
       <div style={{ position: "relative", height: 200, overflow: "hidden" }}>
-        <img src={program.image} alt={`${program.name} program`} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", transform: hov ? "scale(1.07)" : "scale(1)", transition: "transform 0.6s ease" }} />
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top,#111 0%,rgba(17,17,17,.4) 50%,transparent 100%)" }} aria-hidden="true" />
-        {program.recommended && <span style={{ position: "absolute", top: "0.75rem", right: "0.75rem", background: "#a3e635", color: "#0a0a0a", borderRadius: "9999px", padding: "0.25rem 0.75rem", fontSize: "0.7rem", fontWeight: 700 }}>⭐ Top Pick</span>}
+        <img src={prog.image} alt={prog.name} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", transform: hov ? "scale(1.07)" : "scale(1)", transition: "transform 0.6s ease" }} />
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top,#111 0%,rgba(17,17,17,.4) 50%,transparent 100%)" }} />
+        {prog.rec && <span style={{ position: "absolute", top: "0.75rem", right: "0.75rem", background: "#a3e635", color: "#0a0a0a", borderRadius: "9999px", padding: "0.25rem 0.75rem", fontSize: "0.7rem", fontWeight: 700 }}>⭐ Top Pick</span>}
       </div>
       <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", flex: 1 }}>
-        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.4rem, 2.5vw, 1.8rem)", color: hov ? "#a3e635" : "#fff", margin: 0, letterSpacing: "0.05em", lineHeight: 1.1, transition: "color 0.3s ease" }}>{program.name}</h2>
-        <p style={{ color: "#9ca3af", fontSize: "0.85rem", margin: "0.4rem 0 0", lineHeight: 1.5 }}>{program.goal}</p>
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.85rem" }}>
-          <Chip accent>{program.duration}</Chip>
-          <Chip>{program.frequency}</Chip>
-        </div>
-        <ul style={{ marginTop: "0.9rem", paddingLeft: "1.1rem", color: "#9ca3af", fontSize: "0.8rem", lineHeight: 1.8, margin: "0.9rem 0 0 1.1rem" }}>
-          {program.exercises.slice(0, 4).map(ex => <li key={ex}>{ex}</li>)}
-        </ul>
-        <p style={{ marginTop: "0.8rem", fontSize: "0.77rem", color: "rgba(163,230,53,.75)", fontStyle: "italic", lineHeight: 1.5 }}>💡 {program.whyItWorks}</p>
+        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.6rem", color: hov ? "#a3e635" : "#fff", margin: 0, letterSpacing: "0.05em", transition: "color 0.3s ease" }}>{prog.name}</h2>
+        <p style={{ color: "#9ca3af", fontSize: "0.85rem", margin: "0.4rem 0 0.9rem" }}>{prog.goal}</p>
+        <ul style={{ margin: "0 0 0 1rem", padding: 0, color: "#9ca3af", fontSize: "0.79rem", lineHeight: 1.8 }}>{prog.kw.map(k => <li key={k}>{k}</li>)}</ul>
         <div style={{ flex: 1 }} />
-        <button onClick={() => onSelect(program)} aria-label={`Start ${program.name} program`}
-          style={{ display: "flex", alignItems: "center", justifyContent: "center", marginTop: "1.25rem", background: "#a3e635", color: "#0a0a0a", borderRadius: "9999px", padding: "0.75rem 1.5rem", fontSize: "0.875rem", fontWeight: 700, border: "none", cursor: "pointer", boxShadow: hov ? "0 0 22px rgba(163,230,53,.4)" : "none", transition: "box-shadow 0.4s ease", width: "100%" }}>
-          Start This Program →
+        <button onClick={() => onSelect(prog)} aria-label={`Select ${prog.name}`} style={{ marginTop: "1.25rem", background: "#a3e635", color: "#0a0a0a", borderRadius: "9999px", padding: "0.75rem", fontSize: "0.875rem", fontWeight: 700, border: "none", cursor: "pointer", width: "100%", boxShadow: hov ? "0 0 22px rgba(163,230,53,.4)" : "none", transition: "box-shadow 0.4s ease" }}>
+          Select Program →
         </button>
       </div>
     </article>
   );
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   PROGRAM DETAIL
-───────────────────────────────────────────────────────────────────────────── */
-function ProgramDetail({ program, gender, onBack }: { program: Program; gender: Gender; onBack: () => void }) {
+/* ── Duration Selector (Step 3) ──────────────────────────────── */
+function DurationSelector({ gender, prog, onConfirm, onBack }: { gender: Gender; prog: Prog; onConfirm: (d: DurCfg) => void; onBack: () => void }) {
+  const [days, setDays] = useState<Days>(4);
+  const [weeks, setWeeks] = useState<Weeks>(12);
   const isW = gender === "woman";
+  const dayOpts: Days[] = [3, 4, 5, 6];
+  const wkOpts: Weeks[] = [8, 12, 16, 20];
+  const btnBase = { borderRadius: "0.75rem", border: "1px solid", padding: "1.25rem 1.5rem", fontSize: "1.1rem", fontWeight: 700, cursor: "pointer", transition: "all 0.3s ease", fontFamily: "var(--font-display)", letterSpacing: "0.05em" };
+  const active = { ...btnBase, background: "#a3e635", color: "#0a0a0a", borderColor: "#a3e635", boxShadow: "0 0 24px rgba(163,230,53,.45)" };
+  const inactive = { ...btnBase, background: "rgba(255,255,255,.04)", color: "#fff", borderColor: "rgba(255,255,255,.15)" };
   return (
-    <section aria-label={`${program.name} program detail`} style={{ maxWidth: "72rem", margin: "0 auto", padding: "3rem 1.5rem 5rem", width: "100%" }}>
-      <GhostButton onClick={onBack} ariaLabel={`Back to ${isW ? "women's" : "men's"} programs`} style={{ marginBottom: "2.5rem" }}>
-        ← Back to {isW ? "Women's" : "Men's"} Programs
-      </GhostButton>
+    <section aria-label="Duration selection" style={{ maxWidth: "48rem", margin: "0 auto", padding: "4rem 1.5rem", width: "100%", minHeight: "calc(100vh - 72px)", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+      <GhostBtn onClick={onBack} aria="Back to programs" style={{ marginBottom: "2.5rem", alignSelf: "flex-start" }}>← Back</GhostBtn>
+      <p style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "#a3e635", margin: 0 }}>Step 3 — Customise Your Schedule</p>
+      <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.8rem, 4vw, 3rem)", color: "#fff", margin: "0.4rem 0 0.5rem", letterSpacing: "0.05em", lineHeight: 1.1 }}>
+        {isW ? `How many days can you train, queen? 👑` : `How many days are you willing to grind? 💪`}
+      </h1>
+      <p style={{ color: "#9ca3af", marginBottom: "2rem" }}>Building your <span style={{ color: "#a3e635" }}>{prog.name}</span> plan</p>
+
+      <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.1rem", color: "rgba(255,255,255,.6)", letterSpacing: "0.1em", marginBottom: "0.9rem" }}>DAYS PER WEEK</h2>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "0.75rem", marginBottom: "2.5rem" }}>
+        {dayOpts.map(d => <button key={d} onClick={() => setDays(d)} aria-label={`${d} days per week`} style={days === d ? active : inactive}>{d}<br /><span style={{ fontSize: "0.65rem", fontWeight: 400, opacity: 0.7 }}>days</span></button>)}
+      </div>
+
+      <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.1rem", color: "rgba(255,255,255,.6)", letterSpacing: "0.1em", marginBottom: "0.9rem" }}>PROGRAM DURATION</h2>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: "0.75rem", marginBottom: "0.75rem" }}>
+        {wkOpts.map(w => (
+          <button key={w} onClick={() => setWeeks(w)} aria-label={`${w} weeks`} style={weeks === w ? active : inactive}>
+            {w} weeks<br /><span style={{ fontSize: "0.65rem", fontWeight: 400, opacity: 0.75 }}>{WEEK_LABELS[w]}</span>
+          </button>
+        ))}
+      </div>
+      <p style={{ color: "#a3e635", fontSize: "0.85rem", textAlign: "center", marginBottom: "2rem", fontStyle: "italic" }}>
+        ✦ {days} days/week × {weeks} weeks = {days * weeks} total training sessions
+      </p>
+      <button onClick={() => onConfirm({ days, weeks })} aria-label="Build my program" style={{ background: "#a3e635", color: "#0a0a0a", border: "none", borderRadius: "9999px", padding: "1rem 2rem", fontSize: "1rem", fontWeight: 700, cursor: "pointer", boxShadow: "0 0 30px rgba(163,230,53,.4)", transition: "all 0.3s ease", width: "100%" }}>
+        Build My Program →
+      </button>
+    </section>
+  );
+}
+
+/* ── Program Detail (Step 4) ─────────────────────────────────── */
+function ProgramDetail({ prog, gender, dur, onBack }: { prog: Prog; gender: Gender; dur: DurCfg; onBack: () => void }) {
+  const isW = gender === "woman";
+  const sci = SCIENCE[prog.slug] ?? SCIENCE["muscle-building"];
+  const schedule = buildSch(prog.slug, gender, dur.days);
+  const exs = getExercises(prog.slug, gender);
+  const miles = isW ? MILE_W : MILE_M;
+  const nutr = getNutr(prog.slug, gender);
+  const heroImg = progImg(prog.slug, gender);
+  const milePh: [string, string, string][] = [["Week 1–2", dur.weeks >= 12 ? "Week 3–6" : "Week 3–4", dur.weeks >= 8 ? `Week 7–${dur.weeks}` : "Week 7+"], miles, miles];
+
+  return (
+    <article aria-label={`${prog.name} program detail`} style={{ maxWidth: "72rem", margin: "0 auto", padding: "3rem 1.5rem 6rem", width: "100%" }}>
+      <GhostBtn onClick={onBack} aria={`Back to ${isW ? "women's" : "men's"} programs`} style={{ marginBottom: "2rem" }}>← Back to Programs</GhostBtn>
 
       {/* Hero */}
-      <div style={{ position: "relative", height: "clamp(220px,38vh,400px)", borderRadius: "1.25rem", overflow: "hidden", marginBottom: "2.5rem" }}>
-        <img src={program.image} alt={program.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right,rgba(0,0,0,.88) 0%,rgba(0,0,0,.45) 60%,rgba(0,0,0,.1) 100%)" }} aria-hidden="true" />
-        <div style={{ position: "absolute", bottom: 0, left: 0, padding: "2rem 2.5rem" }}>
-          <p style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "#a3e635", margin: "0 0 0.3rem" }}>
-            {isW ? "Women's Program" : "Men's Program"}
-          </p>
-          <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.8rem, 4.5vw, 3.2rem)", color: "#fff", margin: 0, letterSpacing: "0.05em", lineHeight: 1 }}>{program.name}</h1>
-          <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.75rem", flexWrap: "wrap" }}>
-            <Chip accent>{program.duration}</Chip>
-            <Chip>{program.frequency}</Chip>
+      <div style={{ position: "relative", height: "clamp(240px,45vh,440px)", borderRadius: "1.25rem", overflow: "hidden", marginBottom: "3rem" }}>
+        <img src={heroImg} alt={prog.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right,rgba(0,0,0,.9) 0%,rgba(0,0,0,.5) 60%,rgba(0,0,0,.1) 100%)" }} />
+        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: "2.5rem" }}>
+          <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.75rem" }}>
+            <span style={{ background: "#a3e635", color: "#0a0a0a", borderRadius: "9999px", padding: "0.2rem 0.75rem", fontSize: "0.72rem", fontWeight: 700 }}>🔬 Science-Based</span>
+            <span style={{ background: "rgba(255,255,255,.15)", color: "#fff", borderRadius: "9999px", padding: "0.2rem 0.75rem", fontSize: "0.72rem", fontWeight: 600 }}>{isW ? "Women's Program" : "Men's Program"}</span>
+          </div>
+          <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(2rem, 5vw, 3.5rem)", color: "#fff", margin: "0 0 1rem", letterSpacing: "0.05em", lineHeight: 1 }}>{prog.name}</h1>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2,auto)", gap: "0.5rem 2rem" }} className="stats-grid">
+            {[["Duration", `${dur.weeks} weeks`], ["Frequency", `${dur.days}x / week`], ["Sessions", `${dur.days * dur.weeks} total`], ["Goal", prog.goal]].map(([k, v]) => (
+              <div key={k}><p style={{ fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.1em", color: "#a3e635", margin: 0 }}>{k}</p><p style={{ fontSize: "0.95rem", color: "#fff", margin: 0, fontWeight: 600 }}>{v}</p></div>
+            ))}
           </div>
         </div>
       </div>
 
       <div className="dg">
         {/* Left column */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "1.4rem" }}>
-          <InfoCard title="GOAL" accentBorder={false}><p style={{ color: "#d1d5db", margin: 0, lineHeight: 1.6 }}>{program.goal}</p></InfoCard>
-          <InfoCard title="THE SCIENCE" accentBorder><p style={{ color: "#d1d5db", margin: 0, lineHeight: 1.6 }}>{program.science}</p></InfoCard>
-          <InfoCard title="WHY IT WORKS FOR YOU" accentBg><p style={{ color: "#d1d5db", margin: 0, lineHeight: 1.6 }}>{program.whyItWorks}</p></InfoCard>
-          <InfoCard title="KEY EXERCISES" accentBorder={false}>
-            <ul style={{ margin: 0, paddingLeft: "1.1rem", display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-              {program.exercises.map(ex => <li key={ex} style={{ color: "#d1d5db", fontSize: "0.95rem", lineHeight: 1.5 }}>{ex}</li>)}
-            </ul>
-          </InfoCard>
-        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
 
-        {/* Right column — schedule */}
-        <div>
-          <div style={{ background: "#111", border: "1px solid rgba(255,255,255,.08)", borderRadius: "1rem", padding: "1.5rem", position: "sticky", top: "90px" }}>
-            <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem", color: "#a3e635", margin: "0 0 1rem", letterSpacing: "0.05em" }}>WEEKLY SCHEDULE</h2>
+          {/* Science */}
+          <section aria-label="Science section" style={{ background: "#111", border: "1px solid rgba(163,230,53,.2)", borderRadius: "1rem", padding: "1.75rem" }}>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.4rem", color: "#a3e635", margin: "0 0 1rem", letterSpacing: "0.05em" }}>WHY THIS PROGRAM WORKS</h2>
+            <p style={{ color: "#d1d5db", lineHeight: 1.7, margin: "0 0 0.9rem" }}>{sci.p1}</p>
+            <p style={{ color: "#d1d5db", lineHeight: 1.7, margin: "0 0 1.25rem" }}>{sci.p2}</p>
+            <div style={{ background: "rgba(163,230,53,.08)", border: "1px solid rgba(163,230,53,.35)", borderRadius: "0.75rem", padding: "1rem 1.25rem" }}>
+              <p style={{ fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#a3e635", margin: "0 0 0.3rem" }}>Key Principle: {sci.kp}</p>
+              <p style={{ color: "#d1d5db", fontSize: "0.875rem", margin: 0, lineHeight: 1.5 }}>{sci.kpv}</p>
+            </div>
+          </section>
+
+          {/* Weekly Schedule */}
+          <section aria-label="Weekly schedule" style={{ background: "#111", border: "1px solid rgba(255,255,255,.08)", borderRadius: "1rem", padding: "1.75rem" }}>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.4rem", color: "#a3e635", margin: "0 0 1rem", letterSpacing: "0.05em" }}>YOUR WEEKLY SCHEDULE</h2>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-              {program.weeklySchedule.map((s, i) => (
-                <div key={s.day} style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start", padding: "0.6rem 0.8rem", borderRadius: "0.5rem", background: i % 2 === 0 ? "rgba(255,255,255,.03)" : "transparent" }}>
-                  <span style={{ minWidth: "4.5rem", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#a3e635", paddingTop: "0.1rem" }}>{s.day}</span>
-                  <span style={{ color: "#d1d5db", fontSize: "0.875rem", lineHeight: 1.5 }}>{s.focus}</span>
+              {schedule.map((focus, i) => (
+                <div key={i} style={{ display: "flex", gap: "1rem", alignItems: "center", padding: "0.65rem 0.9rem", borderRadius: "0.5rem", background: i % 2 === 0 ? "rgba(255,255,255,.03)" : "transparent" }}>
+                  <span style={{ minWidth: "3.5rem", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", color: "#a3e635" }}>Day {i + 1}</span>
+                  <span style={{ color: "#d1d5db", fontSize: "0.875rem" }}>{focus}</span>
+                </div>
+              ))}
+              {Array.from({ length: 7 - dur.days }).map((_, i) => (
+                <div key={`rest-${i}`} style={{ display: "flex", gap: "1rem", alignItems: "center", padding: "0.65rem 0.9rem", borderRadius: "0.5rem", opacity: 0.4 }}>
+                  <span style={{ minWidth: "3.5rem", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", color: "#9ca3af" }}>Day {dur.days + i + 1}</span>
+                  <span style={{ color: "#9ca3af", fontSize: "0.875rem" }}>Rest & Recovery</span>
                 </div>
               ))}
             </div>
-            <Link href="#" aria-label={`Get full ${program.name} plan`}
-              style={{ display: "flex", alignItems: "center", justifyContent: "center", marginTop: "1.5rem", background: "#a3e635", color: "#0a0a0a", borderRadius: "9999px", padding: "0.85rem 1.5rem", fontSize: "0.9rem", fontWeight: 700, textDecoration: "none", boxShadow: "0 0 22px rgba(163,230,53,.3)", transition: "box-shadow 0.3s ease" }}>
+          </section>
+
+          {/* Exercise Library */}
+          <section aria-label="Exercise library" style={{ background: "#111", border: "1px solid rgba(255,255,255,.08)", borderRadius: "1rem", padding: "1.75rem" }}>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.4rem", color: "#a3e635", margin: "0 0 1rem", letterSpacing: "0.05em" }}>EXERCISE LIBRARY</h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.9rem" }}>
+              {exs.map(ex => (
+                <div key={ex.name} style={{ display: "flex", gap: "1rem", alignItems: "center", padding: "0.75rem", borderRadius: "0.75rem", background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.06)" }}>
+                  <img src={ex.img} alt={ex.name} style={{ width: 64, height: 64, objectFit: "cover", borderRadius: "0.5rem", flexShrink: 0 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
+                      <h3 style={{ fontFamily: "var(--font-display)", fontSize: "1.1rem", color: "#fff", margin: 0, letterSpacing: "0.03em" }}>{ex.name}</h3>
+                      <span style={{ background: "rgba(163,230,53,.12)", color: "#a3e635", borderRadius: "9999px", padding: "0.15rem 0.6rem", fontSize: "0.7rem", fontWeight: 700, flexShrink: 0 }}>{ex.sets}</span>
+                    </div>
+                    <p style={{ color: "#a3e635", fontSize: "0.72rem", fontWeight: 600, margin: "0.1rem 0 0.25rem" }}>{ex.muscle}</p>
+                    <p style={{ color: "#9ca3af", fontSize: "0.78rem", margin: 0, lineHeight: 1.4 }}>{ex.sci}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        {/* Right column */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+
+          {/* Progress Milestones */}
+          <section aria-label="Progress milestones" style={{ background: "#111", border: "1px solid rgba(255,255,255,.08)", borderRadius: "1rem", padding: "1.75rem" }}>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.4rem", color: "#a3e635", margin: "0 0 1rem", letterSpacing: "0.05em" }}>PROGRESS MILESTONES</h2>
+            {[["Week 1–2", 0], [dur.weeks >= 12 ? "Week 3–6" : "Week 3–4", 1], [`Week 7–${dur.weeks}`, 2]].map(([label, idx]) => (
+              <div key={String(label)} style={{ marginBottom: "1rem", paddingLeft: "1rem", borderLeft: "2px solid rgba(163,230,53,.35)" }}>
+                <p style={{ fontSize: "0.72rem", fontWeight: 700, color: "#a3e635", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 0.2rem" }}>{label}</p>
+                <p style={{ color: "#d1d5db", fontSize: "0.875rem", margin: 0, lineHeight: 1.5 }}>{miles[idx as number]}</p>
+              </div>
+            ))}
+          </section>
+
+          {/* Nutrition */}
+          <section aria-label="Nutrition tips" style={{ background: "rgba(163,230,53,.06)", border: "1px solid rgba(163,230,53,.25)", borderRadius: "1rem", padding: "1.75rem" }}>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.4rem", color: "#a3e635", margin: "0 0 0.25rem", letterSpacing: "0.05em" }}>NUTRITION STRATEGY</h2>
+            <p style={{ color: "#a3e635", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 1rem" }}>Protein target: {isW ? "1.6 g/kg" : "2.2 g/kg"} bodyweight</p>
+            {nutr.map((tip, i) => (
+              <div key={i} style={{ display: "flex", gap: "0.75rem", marginBottom: "0.85rem" }}>
+                <span style={{ color: "#a3e635", fontWeight: 700, flexShrink: 0, fontSize: "1rem" }}>{i + 1}.</span>
+                <p style={{ color: "#d1d5db", fontSize: "0.875rem", margin: 0, lineHeight: 1.6 }}>{tip}</p>
+              </div>
+            ))}
+          </section>
+
+          {/* CTA */}
+          <div style={{ background: "#111", border: "1px solid rgba(255,255,255,.08)", borderRadius: "1rem", padding: "1.75rem", textAlign: "center" }}>
+            <p style={{ fontFamily: "var(--font-display)", fontSize: "1.2rem", color: "#fff", letterSpacing: "0.05em", margin: "0 0 0.5rem" }}>READY TO START?</p>
+            <p style={{ color: "#9ca3af", fontSize: "0.85rem", margin: "0 0 1.25rem" }}>{dur.days} days/week · {dur.weeks} weeks · {dur.days * dur.weeks} sessions</p>
+            <Link href="#" aria-label="Get full program" style={{ display: "block", background: "#a3e635", color: "#0a0a0a", borderRadius: "9999px", padding: "0.9rem", fontSize: "0.95rem", fontWeight: 700, textDecoration: "none", boxShadow: "0 0 24px rgba(163,230,53,.35)" }}>
               Get Full Program Plan →
             </Link>
           </div>
         </div>
       </div>
 
-      <style>{`.dg{display:grid;grid-template-columns:1fr;gap:1.5rem}@media(min-width:768px){.dg{grid-template-columns:1fr 1fr}}@media(min-width:1024px){.dg{grid-template-columns:3fr 2fr}}`}</style>
-    </section>
+      <style>{`.dg{display:grid;grid-template-columns:1fr;gap:1.5rem}@media(min-width:900px){.dg{grid-template-columns:3fr 2fr}}.stats-grid{grid-template-columns:repeat(2,auto)!important}@media(min-width:640px){.stats-grid{grid-template-columns:repeat(4,auto)!important}}`}</style>
+    </article>
   );
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   SHARED UI ATOMS
-───────────────────────────────────────────────────────────────────────────── */
-function Chip({ children, accent }: { children: React.ReactNode; accent?: boolean }) {
-  return (
-    <span style={{ borderRadius: "9999px", border: accent ? "1px solid rgba(163,230,53,.35)" : "1px solid rgba(255,255,255,.15)", background: accent ? "rgba(163,230,53,.08)" : "rgba(255,255,255,.05)", color: accent ? "#a3e635" : "rgba(255,255,255,.6)", padding: "0.2rem 0.75rem", fontSize: "0.72rem", fontWeight: 600 }}>
-      {children}
-    </span>
-  );
-}
-
-function InfoCard({ title, children, accentBorder, accentBg }: { title: string; children: React.ReactNode; accentBorder?: boolean; accentBg?: boolean }) {
-  return (
-    <div style={{ background: accentBg ? "rgba(163,230,53,.06)" : "#111", border: `1px solid ${accentBorder ? "rgba(163,230,53,.25)" : "rgba(255,255,255,.08)"}`, borderRadius: "1rem", padding: "1.5rem" }}>
-      <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.25rem", color: "#a3e635", margin: "0 0 0.6rem", letterSpacing: "0.05em" }}>{title}</h2>
-      {children}
-    </div>
-  );
-}
-
-function GhostButton({ onClick, ariaLabel, children, style }: { onClick: () => void; ariaLabel: string; children: React.ReactNode; style?: React.CSSProperties }) {
+/* ── Shared atoms ─────────────────────────────────────────────── */
+function GhostBtn({ onClick, aria, children, style }: { onClick: () => void; aria: string; children: React.ReactNode; style?: React.CSSProperties }) {
   const [hov, setHov] = useState(false);
   return (
-    <button onClick={onClick} aria-label={ariaLabel} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ background: "transparent", border: `1px solid ${hov ? "rgba(163,230,53,.6)" : "rgba(255,255,255,.2)"}`, color: hov ? "#a3e635" : "rgba(255,255,255,.65)", borderRadius: "9999px", padding: "0.6rem 1.25rem", fontSize: "0.875rem", cursor: "pointer", transition: "all 0.3s ease", flexShrink: 0, ...style }}>
+    <button onClick={onClick} aria-label={aria} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={{ background: "transparent", border: `1px solid ${hov ? "rgba(163,230,53,.6)" : "rgba(255,255,255,.2)"}`, color: hov ? "#a3e635" : "rgba(255,255,255,.65)", borderRadius: "9999px", padding: "0.6rem 1.25rem", fontSize: "0.875rem", cursor: "pointer", transition: "all 0.3s ease", ...style }}>
       {children}
     </button>
   );
