@@ -69,44 +69,17 @@ function buildSch(slug: string, g: Gender, days: Days) {
   return out;
 }
 
-const EX_IMGS = {
-  sq: "https://images.unsplash.com/photo-1567598508481-65985588e295?w=400&q=80",
-  dl: "https://images.unsplash.com/photo-1598971639058-fab3c3109a37?w=400&q=80",
-  pu: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&q=80",
-  rn: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=400&q=80",
-  ht: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400&q=80",
-  pl: "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=400&q=80",
-};
-type Ex = { name: string; muscle: string; sets: string; sci: string; img: string };
-const EXERCISES: Record<string, Ex[]> = {
-  "weight-loss-w": [
-    { name: "Hip Thrust", muscle: "Glutes", sets: "4×12", sci: "Peak glute activation while preserving muscle in a deficit.", img: EX_IMGS.ht },
-    { name: "Romanian Deadlift", muscle: "Hamstrings, Glutes", sets: "3×10", sci: "Posterior chain strength preserves lean mass during fat loss.", img: EX_IMGS.dl },
-    { name: "Jump Rope Intervals", muscle: "Cardiovascular", sets: "4×90s", sci: "Creates EPOC — metabolism stays elevated post-workout.", img: EX_IMGS.rn },
-    { name: "Push-Up", muscle: "Chest, Triceps", sets: "3×15", sci: "Upper-body volume with zero equipment needed.", img: EX_IMGS.pu },
-    { name: "Plank Hold", muscle: "Core", sets: "3×45s", sci: "Builds anti-extension core strength for compound lift safety.", img: EX_IMGS.pl },
-    { name: "Goblet Squat", muscle: "Quads, Glutes", sets: "4×12", sci: "Maximises caloric expenditure via large muscle recruitment.", img: EX_IMGS.sq },
-  ],
-  "weight-loss-m": [
-    { name: "Barbell Deadlift", muscle: "Full Posterior Chain", sets: "4×6", sci: "Highest testosterone response — key for muscle retention in deficit.", img: EX_IMGS.dl },
-    { name: "Back Squat", muscle: "Quads, Glutes", sets: "4×8", sci: "Largest muscle group activation = most calories per set.", img: EX_IMGS.sq },
-    { name: "Sprint Intervals", muscle: "Cardiovascular", sets: "8×30s", sci: "HIIT creates EPOC lasting 24–36h after the session.", img: EX_IMGS.rn },
-    { name: "Bench Press", muscle: "Chest, Triceps", sets: "4×10", sci: "Preserves upper-body muscle mass during caloric deficit.", img: EX_IMGS.pu },
-    { name: "Plank Hold", muscle: "Core", sets: "3×60s", sci: "Core stability supports heavy compound performance.", img: EX_IMGS.pl },
-    { name: "Hip Thrust", muscle: "Glutes", sets: "3×10", sci: "Glute strength transfers directly to deadlift lockout power.", img: EX_IMGS.ht },
-  ],
-};
-function getExercises(slug: string, g: Gender): Ex[] {
-  const key = `${slug}-${g[0]}`;
-  if (EXERCISES[key]) return EXERCISES[key];
-  return [
-    { name: "Back Squat", muscle: "Quads, Glutes, Core", sets: "4×8–10", sci: "The king of compound movements — activates 70%+ of total musculature.", img: EX_IMGS.sq },
-    { name: "Deadlift", muscle: "Posterior Chain", sets: "4×6–8", sci: "Highest hormonal adaptation trigger of any single exercise.", img: EX_IMGS.dl },
-    { name: "Push-Up / Bench Press", muscle: "Chest, Shoulders, Triceps", sets: "3×12–15", sci: "Horizontal push pattern essential for upper-body symmetry.", img: EX_IMGS.pu },
-    { name: "Running Intervals", muscle: "Cardiovascular", sets: "8×30s sprint", sci: "HIIT intervals create caloric afterburn for 24–36 hours.", img: EX_IMGS.rn },
-    { name: "Hip Thrust", muscle: "Glutes, Hamstrings", sets: "4×10–12", sci: "Peak glute activation outperforms squats for posterior development.", img: EX_IMGS.ht },
-    { name: "Plank Variations", muscle: "Core", sets: "3×45–60s", sci: "Anti-extension training more effective than crunches for stability.", img: EX_IMGS.pl },
-  ];
+import { PROG_DATA, Exd } from "../programs/data";
+
+function getExercises(slug: string, g: Gender): Exd[] {
+  const genderKey = g === "woman" ? "w" : "m";
+  const pData = PROG_DATA[genderKey]?.[slug];
+  if (!pData) {
+    // Basic fallback if slug is unmatched
+    return PROG_DATA["m"]["st"][1].exercises.A;
+  }
+  // Return Day 1 Phase A exercises
+  return pData[1].exercises.A;
 }
 
 const MILE_W = ["💪 Adaptation — your body is calibrating. Soreness is growth.", "🔥 Progression — energy is up, strength is climbing, clothes fit differently.", "✨ Transformation — visible results, unshakeable habits, unstoppable confidence."];
@@ -338,10 +311,10 @@ function ProgramDetail({ prog, gender, dur, onBack }: { prog: Prog; gender: Gend
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
                       <h3 style={{ fontFamily: "var(--font-display)", fontSize: "1.1rem", color: "#fff", margin: 0, letterSpacing: "0.03em" }}>{ex.name}</h3>
-                      <span style={{ background: "rgba(163,230,53,.12)", color: "#a3e635", borderRadius: "9999px", padding: "0.15rem 0.6rem", fontSize: "0.7rem", fontWeight: 700, flexShrink: 0 }}>{ex.sets}</span>
+                      <span style={{ background: "rgba(163,230,53,.12)", color: "#a3e635", borderRadius: "9999px", padding: "0.15rem 0.6rem", fontSize: "0.7rem", fontWeight: 700, flexShrink: 0 }}>{ex.sets}×{ex.reps}</span>
                     </div>
                     <p style={{ color: "#a3e635", fontSize: "0.72rem", fontWeight: 600, margin: "0.1rem 0 0.25rem" }}>{ex.muscle}</p>
-                    <p style={{ color: "#9ca3af", fontSize: "0.78rem", margin: 0, lineHeight: 1.4 }}>{ex.sci}</p>
+                    <p style={{ color: "#9ca3af", fontSize: "0.78rem", margin: 0, lineHeight: 1.4 }}>{ex.explanation}</p>
                   </div>
                 </div>
               ))}

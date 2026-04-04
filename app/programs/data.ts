@@ -1,8 +1,9 @@
-export type Exd = { name: string; muscle: string; sci: string; img: string };
+export type Exd = { name: string; muscle: string; sets: number; reps: string; explanation: string; img: string };
 export type DayD = { name: string; exercises: { A: Exd[]; B: Exd[]; C: Exd[] } };
 
 const PFX = "https://images.unsplash.com/";
 const SFX = "?w=400&q=80";
+
 const IMGS: Record<string, string> = {
   sq: "photo-1567598508481-65985588e295",
   dl: "photo-1598971639058-fab3c3109a37",
@@ -15,254 +16,424 @@ const IMGS: Record<string, string> = {
   fx: "photo-1518310383802-640c2de311b2",
   kb: "photo-1607962837359-5e7e89f86776",
 };
-const ex = (n: string, m: string, k: string, s: string): Exd => ({ name: n, muscle: m, sci: s, img: PFX + (IMGS[k] ?? IMGS.co) + SFX });
-type Ov = string | null;
-const bld = (name: string, A: Exd[], B: Ov[], C: Ov[]): DayD => ({
-  name,
-  exercises: {
-    A,
-    B: A.map((e, i) => ({ ...e, name: B[i] ?? e.name })),
-    C: A.map((e, i) => ({ ...e, name: C[i] ?? e.name })),
-  },
-});
+
+type DictItem = { muscle: string; imgKey: string; explW: string; explM: string };
+const DICT: Record<string, DictItem> = {
+  "Hip Thrust": { muscle: "Glutes", imgKey: "gl", explW: "EMG studies show hip thrusts activate gluteus maximus 3x more than squats. Essential for female fat loss and glute development.", explM: "Directly loads the gluteus maximus in terminal hip extension. Heavy loading maximizes fast-twitch fiber recruitment for posterior chain power." },
+  "Barbell Hip Thrust": { muscle: "Glutes", imgKey: "gl", explW: "The gold standard for glute development. With added barbell load, activates 95% of gluteus maximus MVC (maximum voluntary contraction).", explM: "Crucial for explosive power and deadlift lockout strength. Heavy loads in terminal extension maximize glute hypertrophy." },
+  "Weighted Hip Thrust": { muscle: "Glutes", imgKey: "gl", explW: "Progressive overload on the glutes triggers serious adaptation. Shapes and lifts the glute muscles exceptionally well.", explM: "Progressive overload directly loads the gluteus maximus, heavily contributing to lower body power metrics." },
+  "Romanian Deadlift": { muscle: "Hamstrings & Glutes", imgKey: "dl", explW: "Targets the posterior chain, improves hamstring flexibility while burning significant calories through large muscle group activation.", explM: "Eccentric deficit training that aggressively loads the hamstrings. Critical for preventing athletic injuries and driving lower body mass." },
+  "Sumo Deadlift": { muscle: "Inner Thighs & Glutes", imgKey: "dl", explW: "The wide stance of sumo deadlift places greater emphasis on hip adductors and glutes — key areas for female body recomposition.", explM: "A highly mechanical lift that utilizes leverage. Activates adductor mass and drives immense lower body strength." },
+  "Single-Leg Deadlift": { muscle: "Balance & Posterior Chain", imgKey: "dl", explW: "Unilateral hinge pattern challenges proprioception while maximally loading each glute independently. Advanced fat-burning compound movement.", explM: "Unilateral stability movement that targets hamstring asymmetries. Prevents leakage of force during bilateral deadlifts." },
+  "Lateral Lunge": { muscle: "Inner Thighs & Quads", imgKey: "sq", explW: "Activates the often-neglected hip adductors. Women have wider hips making this exercise especially effective for thigh toning.", explM: "Builds frontal plane stability and adductor strength. An essential supplemental movement for athletic performance." },
+  "Curtsy Lunge": { muscle: "Glutes & Hip Abductors", imgKey: "sq", explW: "Cross-body movement pattern uniquely targets the gluteus medius — responsible for the side glute curve women often seek.", explM: "Strengthens the gluteus medius and improves hip stability, directly transferring to squat mechanics and knee health." },
+  "Jump Lunge": { muscle: "Quads, Glutes & Cardio", imgKey: "sq", explW: "Alternating plyometric lunges maintain elevated heart rate while building explosive leg power. Burns 12-15 calories per minute.", explM: "An explosive plyometric movement driving unilateral leg power output. Generates high EPOC through large muscle demand." },
+  "Bulgarian Split Squat": { muscle: "Quads & Glutes", imgKey: "sq", explW: "Unilateral movement that corrects muscle imbalances. Studies show 40% greater glute activation vs bilateral squats.", explM: "A savage unilateral builder for quads and glutes. Allows immense mechanical tension without loading the lumbar spine." },
+  "Cable Kickback": { muscle: "Glutes", imgKey: "gl", explW: "Isolates the gluteus maximus through full hip extension. The cable provides constant tension unlike bodyweight variations.", explM: "Isolation movement focused on full glute extension. Provides metabolic stress to the gluteal muscles for complete hypertrophy." },
+  "Resistance Band Kickback": { muscle: "Glutes", imgKey: "gl", explW: "Progressive resistance through full range of motion. The band's accommodating resistance matches the strength curve of hip extension.", explM: "Accommodating resistance matches the strength curve. Useful for high-rep pump work and glute activation." },
+  "Cable Pull-Through": { muscle: "Glutes & Hamstrings", imgKey: "dl", explW: "Hip hinge movement with horizontal resistance vector — uniquely loads the glutes at peak contraction unlike vertical loading exercises.", explM: "Trains the hinge mechanism with a horizontal force vector. Reinforces glute lockout mechanics safely." },
+  "Plank": { muscle: "Core", imgKey: "co", explW: "Activates transverse abdominis — the deep core muscle that creates the 'flat stomach' effect. More effective than crunches for women.", explM: "Anti-extension isometric hold. Develops rigorous core rigidity essential for squat and deadlift bracing safety." },
+  "Side Plank": { muscle: "Obliques & Core", imgKey: "co", explW: "Targets the lateral core and hip abductors simultaneously. Essential for waist definition and spinal stability in women.", explM: "Develops lateral core stability and strengthens the quadratus lumborum. Prevents spinal rotation under heavy unilateral loads." },
+  "Plank with Reach": { muscle: "Core Stability", imgKey: "co", explW: "Anti-rotation core challenge. Extending one arm disrupts center of mass, forcing deeper core stabilizer engagement.", explM: "Anti-rotation isometric drill. Requires massive core recruitment to prevent spinal twist while a limb is elevated." },
+  "Jump Squat": { muscle: "Full Body/Cardio", imgKey: "sq", explW: "Plyometric movement elevates heart rate rapidly, increasing EPOC (afterburn effect) for up to 24 hours post-workout.", explM: "Develops rate of force development (RFD). Fast-twitch muscle fiber recruitment maximizes athletic explosiveness." },
+  "Box Jump": { muscle: "Power & Cardio", imgKey: "rn", explW: "Explosive plyometric that develops fast-twitch muscle fibers. Increases metabolic rate for 36+ hours post-exercise.", explM: "Essential tool for developing leg power. Enhances the stretch-shortening cycle for greater vertical leap and athletic dominance." },
+  "Depth Jump": { muscle: "Explosive Power", imgKey: "rn", explW: "Advanced plyometric using the stretch-shortening cycle to maximize power output and metabolic demand.", explM: "The pinnacle of plyometric training. Maximizes the stretch reflex and neural output for elite athletic power." },
+  "Jump Rope": { muscle: "Cardio/EPOC", imgKey: "rn", explW: "Most calorie-dense cardio exercise at 15-20 cal/min. Improves coordination, bone density, and cardiovascular efficiency.", explM: "Intense cardiovascular conditioning that simultaneously develops ankle stiffness and calf endurance for athletic resilience." },
+  "Burpees": { muscle: "Full Body", imgKey: "ub", explW: "Combines squat, plank and jump into one movement. Elevates heart rate to 90%+ max, creating maximum EPOC effect.", explM: "Total-body anaerobic conditioning. Rapidly depletes glycogen stores and pushes metabolic conditioning to its limits." },
+  "Mountain Climbers": { muscle: "Core & Cardio", imgKey: "co", explW: "Dynamic core exercise that maintains elevated heart rate. Targets rectus abdominis while burning 8-10 calories per minute.", explM: "A dynamic plank variation that crushes the core while sustaining a massive cardiovascular demand." },
+  "High Knees": { muscle: "Hip Flexors & Cardio", imgKey: "rn", explW: "Running in place at maximum effort. Improves hip flexor strength critical for women's posture and lower back health.", explM: "High-intensity sprinting drill that overloads the hip flexors and sustains max aerobic output." },
+  "Lateral Shuffles": { muscle: "Agility & Legs", imgKey: "rn", explW: "Side-to-side movement activates hip abductors and improves frontal plane stability — often undertrained in women.", explM: "Builds athletic agility in the frontal plane. Conditions the adductors and abductors for rapid change of direction." },
+  "Sprint Intervals": { muscle: "VO2 Max", imgKey: "rn", explW: "Maximum effort sprints elevate VO2 max — the strongest predictor of longevity and metabolic health.", explM: "The ultimate metabolic igniter. Sprints release massive amounts of testosterone and GH while shredding body fat." },
+  "Squat Jumps": { muscle: "Quads & Power", imgKey: "sq", explW: "Explosive power movement that fires the glutes out of the hole, triggering intense calorie burn.", explM: "Trains explosive lower body force generation. Hits the quads and glutes with heavy eccentric demands." },
+  "Skater Jumps": { muscle: "Lateral Power", imgKey: "rn", explW: "Mimics ice skating to target the glute medius and outer thighs, sculpting the legs while driving heart rate up.", explM: "Unilateral plyometric drill demanding extreme lateral power and knee stability. Crucial for field athletes." },
+  "Tuck Jumps": { muscle: "Explosive Cardio", imgKey: "rn", explW: "High-intensity jump requiring core strength to bring knees to chest, burning maximal calories.", explM: "High-demand plyometric drill. Forces extreme rapid core contraction and lower body power." },
+  "Push-Ups": { muscle: "Chest & Triceps", imgKey: "ub", explW: "Compound pushing movement. Women often neglect chest training — it lifts and firms the chest by strengthening pectoralis major beneath breast tissue.", explM: "Functional push movement that engages the core and serratus anterior. A high-rep finisher to flush the chest with blood." },
+  "Dumbbell Row": { muscle: "Back & Biceps", imgKey: "bk", explW: "Pulls the shoulder blades together, counteracting forward posture from daily life. Women with desk jobs critically need this movement.", explM: "Corrects muscular imbalances and drives serious back thickness. A heavy compound pull that supports bench press stability." },
+  "Shoulder Press": { muscle: "Deltoids", imgKey: "sh", explW: "Develops the medial deltoid creating the 'capped shoulder' look that creates the visual illusion of a smaller waist.", explM: "Builds massive shoulder width and pressing power. Engages the core heavily to stabilize vertical loads." },
+  "Lat Pulldown": { muscle: "Back Width", imgKey: "bk", explW: "Develops latissimus dorsi — the muscle that creates the V-taper. In women, this creates hourglass proportions.", explM: "The primary builder of lat width. A wide back creates the ultimate aesthetic taper and aids in deadlift stability." },
+  "Tricep Dips": { muscle: "Triceps", imgKey: "ub", explW: "Targets the tricep — the muscle comprising 60% of upper arm volume. Women store more fat here due to estrogen, making direct training essential.", explM: "Compound tricep movement using bodyweight/added weight. The long head of the tricep is fully stretched at the top — critical for maximum mass development." },
+  "Bicep Curl": { muscle: "Biceps", imgKey: "ub", explW: "The long head of the bicep is often underdeveloped in women. Curl variations prevent the 'soft arm' appearance.", explM: "Isolates the biceps brachii for maximal hypertrophy. Constant tension builds peak aesthetic arm size." },
+  "Cable Fly": { muscle: "Chest Isolation", imgKey: "ub", explW: "Provides constant tension to the chest muscles, lifting the bust while avoiding excessive stress on the shoulder joints.", explM: "Cables maintain constant tension throughout the full range of motion unlike dumbbells — maximizing time under tension for hypertrophy." },
+  "Face Pull": { muscle: "Rear Delts", imgKey: "sh", explW: "Essential for posture correction. Strengthens the muscles that pull the shoulders back, creating a proud, confident stance.", explM: "Non-negotiable for shoulder health. Balances out heavy pressing by targeting the external rotators and rear deltoids." },
+  "Overhead Tricep Extension": { muscle: "Triceps Long Head", imgKey: "ub", explW: "Lengthens the tricep fully to tone the back of the arms, specifically addressing typical female trouble areas.", explM: "Isolation movement that fully lengthens the long head of the tricep. Lengthened-position training is superior for muscle hypertrophy." },
+  "Goblet Squat": { muscle: "Quads & Glutes", imgKey: "sq", explW: "Front-loading the weight forces upright posture and deep core engagement, making it highly effective for lower body toning.", explM: "A fantastic anterior-loaded quad builder. Demands intense core bracing and perfects deep squat mechanics." },
+  "Incline Press": { muscle: "Upper Chest", imgKey: "ub", explW: "Targets the upper pectoral muscles, lifting the chest aesthetically while tightening the upper torso safely.", explM: "The upper chest (clavicular head of pectoralis major) is often underdeveloped. Incline angle shifts emphasis to create the 'shelf' appearance at the collarbone." },
+  "Tricep Pushdown": { muscle: "Triceps", imgKey: "ub", explW: "Firms the triceps effectively with cables, providing constant resistance to tighten the back of the arms.", explM: "Isolates the lateral head of the triceps. Ideal for high-rep pump work and building the horseshoe aesthetic." },
+  "Barbell Squat": { muscle: "Quads & Glutes", imgKey: "sq", explW: "The ultimate lower body builder. Loading the spine increases bone mineral density, combatting osteoporosis in women.", explM: "85%+ neural adaptation. High testosterone release from heavy loads makes this the king of overall muscle and strength." },
+  "Deadlift": { muscle: "Full Body", imgKey: "dl", explW: "Develops incredible total body strength without adding unwanted bulk (due to female hormonal profiles). Strengthens the entire back.", explM: "The ultimate indicator of raw strength. Triggers a massive hormonal response and CNS adaptation for system-wide growth." },
+  "Bench Press": { muscle: "Chest & Triceps", imgKey: "ub", explW: "A fundamental upper body movement that builds strength and density in the chest, shoulders, and arms.", explM: "The king of upper body exercises. Activates 93% of pectoralis major MVC. Testosterone release is maximized with heavy compound pressing." },
+  "Overhead Press": { muscle: "Shoulders", imgKey: "sh", explW: "Builds functional strength for daily life tasks while defining the shoulders perfectly to complement the female physique.", explM: "The ultimate test of upper body kinetic chain strength. Builds monstrous shoulders and a rock-solid core." },
+  "Pull-ups": { muscle: "Back & Biceps", imgKey: "bk", explW: "Mastering the pull-up builds incredible relative strength and confidence while creating beautiful upper back definition.", explM: "The absolute standard for relative upper body strength. Unlatches extreme back width and bicep thickness." },
+  "Barbell Row": { muscle: "Back", imgKey: "bk", explW: "Heavy compound rows build a dense, strong back that supports deadlifts and counteracts poor modern posture.", explM: "Heavy horizontal pulls are mandatory for a massive, thick back. Directly balances the heavy pressing to keep shoulders healthy." },
+  "Running": { muscle: "Cardio", imgKey: "rn", explW: "Builds a deep aerobic base, improving mitochondrial density and cardiovascular health specific to female longevity.", explM: "LISS or tempo running increases stroke volume and cardiovascular efficiency, enabling faster recovery between heavy sets." },
+  "Cycling": { muscle: "Cardio", imgKey: "rn", explW: "Low-impact endurance work that tones the quads and improves cardiovascular efficiency safely.", explM: "Non-impact aerobic conditioning that spares the joints while building immense quad endurance and cardiovascular capacity." },
+  "Rowing": { muscle: "Full Body Cardio", imgKey: "bk", explW: "A full-body cardiovascular challenge that relies heavily on leg drive and back strength, maximizing calorie burn.", explM: "Combines powerful leg drive with an aggressive back pull. Builds explosive endurance and torches calories rapidly." },
+  "Stair Climber": { muscle: "Glutes & Quads", imgKey: "gl", explW: "The ultimate functional cardio for targeting the glutes and leaning out the legs simultaneously.", explM: "Savage lower-body conditioning that builds endurance in the quads and glutes while testing mental fortitude." },
+  "Swimming": { muscle: "Full Body", imgKey: "ub", explW: "Complete zero-impact cardiovascular training that elongates muscles and increases lung capacity naturally.", explM: "Incredible for active recovery and shoulder mobility. Provides a brutal full-body cardiovascular stimulus with zero joint impact." },
+  "Hip Flexor Stretch": { muscle: "Flexibility", imgKey: "fx", explW: "Releases tight hips from sitting, resetting pelvic tilt and easing lower back pain effectively.", explM: "Opens up the anterior chain, severely improving squat depth and alleviating lower back tightness from heavy lifting." },
+  "Pigeon Pose": { muscle: "Glute Mobility", imgKey: "fx", explW: "A deep glute and piriformis stretch that increases pelvic elasticity and regulates hormones through mindful yoga practice.", explM: "Deep external rotation stretch. Unlocks tight hips, facilitating deeper, safer squats and deadlifts." },
+  "Thoracic Rotation": { muscle: "Spine Mobility", imgKey: "co", explW: "Improves upper back mobility, keeping the spine youthful and supple to counteract daily slouching.", explM: "Restores rotational mobility in the mid-back. Critical for overhead lifting mechanics and shoulder health." },
+  "Hamstring Stretch": { muscle: "Flexibility", imgKey: "fx", explW: "Lengthens the back of the legs dynamically, reducing the risk of injuries during explosive athletic movements.", explM: "Increases hamstring tissue extensibility. Crucial for optimizing the hip hinge in Romanian Deadlifts and swings." },
+  "Shoulder Mobility": { muscle: "Shoulders", imgKey: "sh", explW: "Opens up the chest and shoulders, allowing for better posture and pain-free upper body movement.", explM: "Releases tight pecs and anterior delts, preventing impingement during heavy bench pressing." },
+  "Cat-Cow": { muscle: "Spine", imgKey: "co", explW: "Rhythmic breathing paired with spinal flexion and extension gently nourishes the discs and relieves back tension.", explM: "Safely articulates the spinal segments. A mandatory warm-up for hydrating the intervertebral discs before heavy loaded squats." },
+  "Butterfly Stretch": { muscle: "Inner Thighs", imgKey: "fx", explW: "A classic stretch that opens the hips and groin, improving overall pelvic floor elasticity.", explM: "Lengthens the adductor complex, reducing the risk of groin strains during wide-stance explosive movements." },
+  "Spinal Twist": { muscle: "Spine", imgKey: "co", explW: "A deep restorative stretch targeting the fascia, leaving the entire back feeling thoroughly decompressed.", explM: "Decompresses the lumbar spine and stretches the obliques. Excellent for post-workout neural recovery." },
+  "Incline Dumbbell Press": { muscle: "Upper Chest", imgKey: "ub", explW: "Shifts the emphasis to the upper chest, creating firmness and lift for a more youthful décolletage.", explM: "The upper chest (clavicular head of pectoralis major) is often underdeveloped. Incline angle shifts emphasis to create the 'shelf' appearance at the collarbone." },
+  "Skull Crushers": { muscle: "Tricep Long Head", imgKey: "ub", explW: "Isolates the back of the arms forcefully, ensuring the triceps stay tight and strong.", explM: "Isolation movement that fully lengthens the long head of the tricep. Lengthened-position training is superior for muscle hypertrophy per recent research." },
+  "Leg Press": { muscle: "Quads", imgKey: "sq", explW: "Allows for heavy, safe loading of the legs without stressing the spine, perfect for concentrated leg toning.", explM: "Delivers massive hyper-focused volume to the quads with zero axial fatigue on the spine." },
+  "Leg Curl": { muscle: "Hamstrings", imgKey: "dl", explW: "Directly isolates the hamstrings to create a balanced lift and tone on the back of the thighs.", explM: "Isolates the knee flexion function of the hamstrings. Critical for complete posterior leg development." },
+  "Leg Extension": { muscle: "Quads", imgKey: "sq", explW: "Isolates the quadriceps for a deep burn, sculpting the front of the thighs with precision.", explM: "Takes the quads through full terminal extension. Maximizes the 'teardrop' (VMO) muscle hypertrophy." },
+  "Calf Raise": { muscle: "Calves", imgKey: "sq", explW: "Strengthens the lower leg and ankle joint, building shapely calves while preventing high-heel related injuries.", explM: "Pumps high-rep volume into the dense gastrocnemius muscles, sparking stubborn lower leg growth." },
+  "Lateral Raise": { muscle: "Lateral Deltoid", imgKey: "sh", explW: "Widens the shoulders slightly to visually shrink the waist, a key move for female body recomposition.", explM: "Directly targets the medial deltoid. Capped shoulders drastically widen the frame and enhance the critical V-taper." },
+  "Front Raise": { muscle: "Anterior Deltoid", imgKey: "sh", explW: "Firms the front of the shoulders for total rounded arm definition and lifting capability.", explM: "Isolates the front delt. Supplements pressing power while defining the separation between chest and shoulder." },
+  "Shrug": { muscle: "Upper Traps", imgKey: "bk", explW: "Relieves neck tension and strengthens the upper back for carrying heavy daily loads.", explM: "Builds a massive yoke. Thick upper traps are visually dominant and support the neck against heavy barbell impact." },
+  "Arnold Press": { muscle: "All Deltoids", imgKey: "sh", explW: "A twisting press that engages all three shoulder heads simultaneously for maximum efficiency.", explM: "The rotational mechanics recruit maximum muscle fibers across the anterior and medial deltoids for severe growth." },
+  "Preacher Curl": { muscle: "Bicep Peak", imgKey: "ub", explW: "Locks the elbows in place to prevent momentum, strictly isolating the bicep muscle.", explM: "Eliminates cheating. Engorges the bicep under strict tension to maximize the absolute peak size." },
+  "Incline Curl": { muscle: "Bicep Long Head", imgKey: "ub", explW: "Stretches the bicep uniquely from a reclined angle, reaching muscle fibers often missed.", explM: "Places the bicep in an extreme stretch. Stretch-mediated hypertrophy triggers aggressive new tissue synthesis." },
+  "Ab Wheel": { muscle: "Full Core", imgKey: "co", explW: "An intense anti-extension rollout that engages the entire abdominal wall deeper than standard sit-ups.", explM: "A brutal anti-extension core drill. Engages the lats and completely obliterates the rectus abdominis." },
+  "Power Clean": { muscle: "Full Body Explosive", imgKey: "rn", explW: "Develops total-body power and coordination, utilizing the entire kinetic chain at once.", explM: "The gold standard for rate of force development (RFD). Trains the nervous system to explode with heavy loads." },
+  "Kettlebell Swing": { muscle: "Posterior Chain", imgKey: "kb", explW: "A hip-hinge powerhouse that intensely fires the glutes while burning massive calories through momentum control.", explM: "Aggressive explosive hip-hinge. Revs the metabolism incredibly high while sparing the knees and boosting testosterone." },
+  "Battle Ropes": { muscle: "Cardiovascular", imgKey: "ub", explW: "A brutal upper-body cardio workout that torches fat without traditional running.", explM: "Anaerobic upper-body conditioning. Elevates EPOC instantly and sustains a massive pump without muscle mass loss." },
+  "Sled Push": { muscle: "Full Body Power", imgKey: "sq", explW: "Pure concentric work that burns massive amounts of calories with almost zero muscle soreness the next day.", explM: "Maximal concentric effort with no eccentric damage. Perfectly maintains metabolic rate without interfering with heavy lifting recovery." },
+};
+
+// Default fallback generator
+function safeDict(name: string, gender: "w" | "m") {
+  const ex = DICT[name];
+  if (ex) return { muscle: ex.muscle, explanation: gender === "w" ? ex.explW : ex.explM, imgKey: ex.imgKey };
+  return { muscle: "Full Body", explanation: gender === "w" ? "Empowering body-positive compound movement." : "Performance-focused powerful movement.", imgKey: "co" };
+}
+
+// Sets/Reps Rules
+const PROTO: Record<string, { A: [number, string]; B: [number, string]; C: [number, string] }> = {
+  st: { A: [5, "5"], B: [4, "4"], C: [3, "3"] },
+  mb: { A: [4, "10"], B: [4, "8"], C: [5, "6"] },
+  wl: { A: [3, "15"], B: [4, "12"], C: [4, "15"] },
+  en: { A: [3, "20"], B: [4, "20"], C: [5, "20"] },
+  fl: { A: [3, "30s"], B: [4, "45s"], C: [5, "60s"] },
+  br: { A: [3, "12"], B: [4, "10"], C: [4, "8"] },
+};
+
+function buildEx(progKey: string, phase: "A" | "B" | "C", gender: "w" | "m", overrideRepData: string): Exd {
+  let [name, customRep] = overrideRepData.split("|");
+  const d = safeDict(name, gender);
+  let sets = PROTO[progKey][phase][0];
+  let reps = customRep || PROTO[progKey][phase][1];
+  
+  if (progKey === "br" && phase === "C" && !customRep) reps += " + HIIT";
+  // specific rest tweaks per rules
+  if (progKey === "wl" && phase === "C" && !customRep) reps += " (30s rest)";
+
+  return {
+    name,
+    muscle: d.muscle,
+    sets,
+    reps,
+    explanation: d.explanation,
+    img: PFX + IMGS[d.imgKey] + SFX,
+  };
+}
+
+function makeDay(name: string, progKey: string, gender: "w" | "m", aList: string[], bList: string[], cList: string[]): DayD {
+  return {
+    name,
+    exercises: {
+      A: aList.map((e) => buildEx(progKey, "A", gender, e)),
+      B: bList.map((e) => buildEx(progKey, "B", gender, e)),
+      C: cList.map((e) => buildEx(progKey, "C", gender, e)),
+    },
+  };
+}
 
 export const PROG_DATA: Record<string, Record<string, Record<number, DayD>>> = {
   w: {
     wl: {
-      1: bld("Lower Body Burn",
-        [ex("Hip Thrust","Glutes","gl","Peak glute EMG."),ex("Romanian Deadlift","Hamstrings","dl","Eccentric deficit training."),ex("Lateral Lunge","Inner Thighs","sq","Frontal plane balance."),ex("Cable Kickback","Glutes","gl","Isolation prevents atrophy."),ex("Plank","Core","co","Anti-extension spine."),ex("Jump Squat","Quads","sq","24h EPOC trigger.")],
-        ["Weighted Hip Thrust","Sumo Deadlift","Curtsy Lunge","RB Kickback","Side Plank","Box Jump"],
-        ["Barbell Hip Thrust","Single-leg Deadlift","Jump Lunge","Cable Pull-through","Plank+Reach","Depth Jump"]),
-      2: bld("HIIT Cardio",
-        [ex("Jump Rope","Cardiovascular","rn","36h EPOC effect."),ex("Burpees","Full Body","ub","Max caloric expenditure."),ex("Mountain Climbers","Core & Cardio","co","Core with cardio."),ex("High Knees","Hip Flexors","rn","Hip activation doubles cardio."),ex("Box Jumps","Explosive Power","rn","Fast-twitch recruitment."),ex("Sprint Intervals","VO2 Max","rn","Pushes cardio ceiling.")],
-        ["Double Unders","Weighted Burpees","Plyo Climbers","Fast High Knees","Plyo Jumps","Hill Sprints"],
-        ["Speed Rope","Burpee Pull-up","Weighted Climbers","Ladder Drills","Depth Jumps","400m Repeats"]),
-      3: bld("Upper Body Tone",
-        [ex("Push-up","Chest & Triceps","ub","Progressive push pattern."),ex("Dumbbell Row","Back","bk","Horizontal pull posture."),ex("Shoulder Press","Deltoids","sh","Functional shoulder strength."),ex("Lat Pulldown","Lats","bk","Vertical pull width."),ex("Tricep Dips","Triceps","ub","2/3 of arm size."),ex("Bicep Curl","Biceps","ub","Peak stretch recruitment.")],
-        ["Archer Push-up","Barbell Row","Arnold Press","Pull Negative","Diamond Push-up","Hammer Curl"],
-        ["Plyo Push-up","Pendlay Row","Push Press","Assisted Pull-up","Ring Dips","Concentration Curl"]),
-      4: bld("Full Body Circuit",
-        [ex("Goblet Squat","Quads & Glutes","sq","Max caloric burn compound."),ex("Push-up","Chest & Triceps","ub","Preserves muscle deficit."),ex("Dumbbell Row","Back","bk","Push:pull shoulder balance."),ex("Hip Thrust","Glutes","gl","Glute shape during cut."),ex("Plank","Core","co","Core supports compounds."),ex("Jump Rope","Cardio","rn","EPOC closing work.")],
-        ["Barbell Squat","Pause Push-up","Cable Row","Weighted Hip Thrust","Side Plank","Battle Ropes"],
-        ["Front Squat","Weighted Dips","Pendlay Row","Barbell Hip Thrust","Dragon Flag","Assault Bike"]),
+      1: makeDay("Glute & Leg Burn", "wl", "w",
+        ["Hip Thrust", "Romanian Deadlift", "Lateral Lunge", "Cable Kickback", "Plank", "Jump Squat"],
+        ["Sumo Deadlift", "Bulgarian Split Squat", "Curtsy Lunge", "Resistance Band Kickback", "Side Plank", "Box Jump"],
+        ["Barbell Hip Thrust", "Single-Leg Deadlift", "Jump Lunge", "Cable Pull-Through", "Plank with Reach", "Depth Jump"]
+      ),
+      2: makeDay("HIIT Cardio", "wl", "w",
+        ["Jump Rope|1min", "Burpees", "Mountain Climbers|20", "High Knees|30s", "Lateral Shuffles|30s", "Sprint Intervals|20s"],
+        ["Jump Rope|1min", "Burpees", "Mountain Climbers|25", "High Knees|40s", "Squat Jumps", "Skater Jumps"],
+        ["Jump Rope|1min", "Box Jump", "Mountain Climbers|30", "Tuck Jumps", "Lateral Shuffles|40s", "Sprint Intervals|30s"]
+      ),
+      3: makeDay("Upper Body Tone", "wl", "w",
+        ["Push-Ups", "Dumbbell Row", "Shoulder Press", "Lat Pulldown", "Tricep Dips", "Bicep Curl"],
+        ["Push-Ups", "Dumbbell Row", "Shoulder Press", "Lat Pulldown", "Cable Fly", "Face Pull"],
+        ["Incline Press", "Dumbbell Row", "Shoulder Press", "Lat Pulldown", "Overhead Tricep Extension", "Bicep Curl"]
+      ),
+      4: makeDay("Full Body Metabolic Circuit", "wl", "w",
+        ["Goblet Squat", "Push-Ups", "Romanian Deadlift", "Cable Kickback", "Plank", "Jump Rope|1min"],
+        ["Sumo Deadlift", "Cable Fly", "Bulgarian Split Squat", "Resistance Band Kickback", "Side Plank", "Skater Jumps"],
+        ["Barbell Hip Thrust", "Incline Press", "Single-Leg Deadlift", "Cable Pull-Through", "Plank with Reach", "Sprint Intervals|30s"]
+      )
     },
     mb: {
-      1: bld("Glutes & Legs",
-        [ex("Bulgarian Split Squat","Glutes & Quads","sq","Corrects size asymmetry."),ex("Goblet Squat","Quads & Glutes","sq","Full-depth hypertrophy."),ex("Hip Thrust","Glutes","gl","Progressive overload glutes."),ex("Romanian Deadlift","Hamstrings","dl","Isolates posterior chain."),ex("Leg Press","Quads","sq","Volume without spine load."),ex("Calf Raise","Calves","sq","High-rep lower leg.")],
-        ["Barbell Squat","Pause Squat","Weighted Hip Thrust","Sumo Deadlift","Hack Squat","Single-leg Calf"],
-        ["Front Squat","Belt Squat","Barbell Hip Thrust","Single-leg Deadlift","Spanish Squat","Donkey Calf"]),
-      2: bld("Back & Biceps",
-        [ex("Lat Pulldown","Lats","bk","Vertical pull lat width."),ex("Dumbbell Row","Back","bk","Mid-back density."),ex("Cable Row","Mid Back","bk","Constant cable tension."),ex("Face Pull","Rear Delts","sh","Essential shoulder health."),ex("Bicep Curl","Biceps","ub","Peak stretch hypertrophy."),ex("Hammer Curl","Brachialis","ub","Arm thickness neutral grip.")],
-        ["Pull Negative","Barbell Row","Seated Row","Rear Delt Fly","Preacher Curl","EZ-bar Curl"],
-        ["Pull-up","Pendlay Row","Dead Row","Band Pull-apart","Incline Curl","Reverse Curl"]),
-      3: bld("Chest & Triceps",
-        [ex("Incline DB Press","Upper Chest","ub","Incline targets upper pec."),ex("Push-up","Chest","ub","High-rep volume."),ex("Cable Fly","Chest","ub","Constant tension isolation."),ex("Shoulder Press","Anterior Delts","sh","Compound shoulder mass."),ex("Tricep Pushdown","Triceps","ub","Lateral head isolation."),ex("Overhead Extension","Triceps","ub","Long-head stretch hypertrophy.")],
-        ["Flat Bench Press","Pause Push-up","Pec Dec","Seated DB Press","Skull Crushers","CG Push-up"],
-        ["Weighted Dips","Plyo Push-up","Cable Crossover","Push Press","JM Press","Tricep Kickback"]),
-      4: bld("Full Body Power",
-        [ex("Deadlift","Full Body","dl","Most effective compound."),ex("Barbell Squat","Quads & Glutes","sq","Primary lower compound."),ex("Pull-up","Back & Biceps","bk","Best upper pulling."),ex("Bench Press","Chest & Triceps","ub","Horizontal press strength."),ex("Plank","Core","co","Core caps power day."),ex("Jump Squat","Power","sq","Explosive finisher metabolism.")],
-        ["Pause Deadlift","Front Squat","Weighted Pull-up","Incline Press","Ab Wheel","Box Jump"],
-        ["Trap Bar DL","Overhead Squat","L-sit Pull-up","CG Bench","Dragon Flag","Depth Jump"]),
+      1: makeDay("Glutes & Legs", "mb", "w",
+        ["Hip Thrust", "Bulgarian Split Squat", "Goblet Squat", "Romanian Deadlift", "Leg Press", "Calf Raise"],
+        ["Barbell Hip Thrust", "Bulgarian Split Squat", "Goblet Squat", "Sumo Deadlift", "Leg Press", "Calf Raise"],
+        ["Weighted Hip Thrust", "Barbell Squat", "Leg Press", "Single-Leg Deadlift", "Leg Curl", "Calf Raise"]
+      ),
+      2: makeDay("Back & Biceps", "mb", "w",
+        ["Lat Pulldown", "Dumbbell Row", "Face Pull", "Bicep Curl", "Incline Curl", "Plank"],
+        ["Lat Pulldown", "Barbell Row", "Face Pull", "Preacher Curl", "Incline Curl", "Side Plank"],
+        ["Pull-ups", "Barbell Row", "Cable Pull-Through", "Bicep Curl", "Preacher Curl", "Plank with Reach"]
+      ),
+      3: makeDay("Chest, Shoulders & Triceps", "mb", "w",
+        ["Incline Press", "Push-Ups", "Cable Fly", "Shoulder Press", "Tricep Pushdown", "Tricep Dips"],
+        ["Incline Press", "Arnold Press", "Cable Fly", "Lateral Raise", "Overhead Tricep Extension", "Tricep Dips"],
+        ["Bench Press", "Arnold Press", "Front Raise", "Lateral Raise", "Skull Crushers", "Tricep Pushdown"]
+      ),
+      4: makeDay("Full Body Power", "mb", "w",
+        ["Deadlift", "Barbell Squat", "Pull-ups", "Incline Press", "Plank", "Jump Squat"],
+        ["Sumo Deadlift", "Barbell Squat", "Lat Pulldown", "Shoulder Press", "Side Plank", "Box Jump"],
+        ["Romanian Deadlift", "Bulgarian Split Squat", "Barbell Row", "Arnold Press", "Plank with Reach", "Depth Jump"]
+      )
     },
     st: {
-      1: bld("Lower Power",
-        [ex("Barbell Squat","Quads & Core","sq","85%+ neural adaptation."),ex("Romanian Deadlift","Hamstrings","dl","Heavy posterior chain."),ex("Leg Press","Quads","sq","Volume, no spine load."),ex("Hip Thrust","Glutes","gl","Glute strength lockout."),ex("Calf Raise","Calves","sq","Ankle stability load."),ex("Plank","Core","co","Core force transfer.")],
-        ["Pause Squat","Stiff-leg DL","Hack Squat","Weighted Hip Thrust","Single-leg Calf","Ab Wheel"],
-        ["Competition Squat","Deficit DL","Belt Squat","Barbell Hip Thrust","Loaded Calf","Dragon Flag"]),
-      2: bld("Upper Strength",
-        [ex("Bench Press","Chest & Triceps","ub","Primary horizontal strength."),ex("Overhead Press","Shoulders","sh","Vertical push strength."),ex("Pull-up","Back & Biceps","bk","Best relative strength."),ex("Dumbbell Row","Back","bk","Corrects imbalances."),ex("Tricep Dips","Triceps","ub","Pressing lockout strength."),ex("Face Pull","Rear Delts","sh","Shoulder health mandatory.")],
-        ["Pause Bench","Push Press","Weighted Pull-up","Barbell Row","Weighted Dips","Band Pull-apart"],
-        ["Board Press","Jerk","L-sit Pull-up","Pendlay Row","Ring Dips","Rear Delt Row"]),
-      3: bld("Full Body Strength",
-        [ex("Deadlift","Full Body","dl","King of strength movements."),ex("Front Squat","Quads & Core","sq","Anterior quad strength."),ex("Push Press","Shoulders","sh","Kinetic chain power."),ex("Barbell Row","Back","bk","Balances pressing."),ex("Nordic Curl","Hamstrings","dl","Injury risk reduction."),ex("Farmer Walk","Grip & Core","dl","Real functional strength.")],
-        ["Sumo DL","Zercher Squat","Jerk","Pendlay Row","GH Raise","Yoke Walk"],
-        ["Deficit DL","Safety Bar Squat","Split Jerk","Weighted Pull-up","Single-leg DL","Atlas Carry"]),
+      1: makeDay("Lower Strength", "st", "w",
+        ["Barbell Squat", "Romanian Deadlift", "Leg Press", "Hip Thrust", "Calf Raise", "Plank"],
+        ["Barbell Squat", "Sumo Deadlift", "Leg Press", "Barbell Hip Thrust", "Calf Raise", "Side Plank"],
+        ["Barbell Squat", "Deadlift", "Leg Press", "Weighted Hip Thrust", "Calf Raise", "Plank with Reach"]
+      ),
+      2: makeDay("Upper Strength", "st", "w",
+        ["Bench Press", "Overhead Press", "Pull-ups", "Barbell Row", "Tricep Dips", "Face Pull"],
+        ["Incline Press", "Overhead Press", "Lat Pulldown", "Dumbbell Row", "Tricep Pushdown", "Face Pull"],
+        ["Bench Press", "Arnold Press", "Pull-ups", "Barbell Row", "Skull Crushers", "Face Pull"]
+      ),
+      3: makeDay("Full Body Strength", "st", "w",
+        ["Deadlift", "Barbell Squat", "Bench Press", "Overhead Press", "Pull-ups", "Hip Thrust"],
+        ["Sumo Deadlift", "Barbell Squat", "Incline Press", "Arnold Press", "Lat Pulldown", "Barbell Hip Thrust"],
+        ["Deadlift", "Barbell Squat", "Bench Press", "Overhead Press", "Pull-ups", "Weighted Hip Thrust"]
+      )
     },
     en: {
-      1: bld("Zone 2 Steady",
-        [ex("Running Intervals","Cardiovascular","rn","Zone 2 mitochondrial density."),ex("Stair Climber","Glutes & Cardio","gl","Glute aerobic base."),ex("Rowing","Full Body Aerobic","bk","Low-impact full-body."),ex("Jump Rope","Conditioning","rn","High caloric minimal equipment."),ex("Bodyweight Squat","Legs","sq","Maintains muscle mass."),ex("Cool Down Stretch","Flexibility","fx","Reduces DOMS recovery.")],
-        ["Tempo Run","Step Mill","Ergometer","Double Unders","Step-up","Hip Flexor Stretch"],
-        ["Long Intervals","Weighted Stair","Row Sprints","Speed Rope","Squat Hold","Yoga Flow"]),
-      2: bld("Strength Base",
-        [ex("Bodyweight Squat","Legs","sq","Maintains mass in cardio."),ex("Push-up","Upper Body","ub","Preserves upper strength."),ex("Dumbbell Row","Back","bk","Prevents posture issues."),ex("Plank","Core Endurance","co","Running foundation."),ex("Hip Thrust","Glutes","gl","Primary running power."),ex("Reverse Lunge","Legs","sq","Prevents gait asymmetry.")],
-        ["Goblet Squat","Archer Push-up","Cable Row","Side Plank","Weighted Bridge","Walking Lunge"],
-        ["Barbell Squat","Weighted Dips","Barbell Row","Ab Wheel","Barbell Hip Thrust","Jump Lunge"]),
-      3: bld("Tempo Intervals",
-        [ex("Sprint Intervals","VO2 Max","rn","Pushes aerobic ceiling."),ex("High Knees","Hip Flexors","rn","Improves running economy."),ex("Box Jumps","Explosive Power","rn","Running power output."),ex("Jump Rope","Coordination","rn","Foot strike rhythm."),ex("Mountain Climbers","Core & Cardio","co","Core stability demand."),ex("Cool Down Walk","Recovery","rn","Active lactate clearance.")],
-        ["Hill Sprints","Fast Feet","Plyo Jumps","Double Unders","Plyo Push-up","Light Jog"],
-        ["400m Repeats","Ladder Drills","Depth Jumps","Speed Rope","Burpees","Stride Outs"]),
-      4: bld("Cross Training",
-        [ex("Rowing","Full Body Aerobic","bk","Non-impact full-body."),ex("Cycling","Aerobic Base","rn","Quad cardio no impact."),ex("Hip Mobility","Hip Flexibility","fx","Reverses running tightness."),ex("Shoulder Mobility","Shoulders","sh","Maintains running posture."),ex("Core Circuit","Core Endurance","co","Core maintains form."),ex("Foam Rolling","Recovery","co","Reduces soreness.")],
-        ["Row Intervals","Bike HIIT","Deep Stretching","Band Shoulder","Plank Complex","Mobility Flow"],
-        ["Max Effort Row","Zwift Ride","Full Body Mobility","Shoulder CARs","Dragon Flag","Recovery Yoga"]),
-      5: bld("Long Session",
-        [ex("Long Run","Aerobic Capacity","rn","Long distance aerobic base."),ex("Plank","Core Endurance","co","Core maintains form."),ex("Glute Bridge","Glutes","gl","Post-run activation."),ex("Hip Flexor Stretch","Flexibility","fx","Long run tightness."),ex("Calf Stretch","Calves","fx","Injury risk reduction."),ex("Breathing Drills","Respiratory","co","Running economy.")],
-        ["Progression Run","Side Plank","Single-leg Bridge","Pigeon Pose","Downward Dog","Box Breathing"],
-        ["Race Pace Run","Ab Wheel","Weighted Bridge","Full Hip Flow","Hamstring Flow","Apnea Training"]),
+      1: makeDay("Long Intervals", "en", "w",
+        ["Running", "Stair Climber", "Rowing", "Jump Rope", "Cycling", "Swimming"],
+        ["Running", "Stair Climber", "Rowing", "Jump Rope", "Cycling", "Swimming"],
+        ["Running", "Stair Climber", "Rowing", "Jump Rope", "Cycling", "Swimming"]
+      ),
+      2: makeDay("Strength Base", "en", "w",
+        ["Goblet Squat", "Push-Ups", "Dumbbell Row", "Plank", "Hip Thrust", "Lateral Lunge"],
+        ["Bulgarian Split Squat", "Push-Ups", "Barbell Row", "Side Plank", "Barbell Hip Thrust", "Curtsy Lunge"],
+        ["Barbell Squat", "Bench Press", "Pull-ups", "Plank with Reach", "Weighted Hip Thrust", "Jump Lunge"]
+      ),
+      3: makeDay("Tempo Push", "en", "w",
+        ["Sprint Intervals", "High Knees", "Box Jump", "Jump Rope", "Mountain Climbers", "Lateral Shuffles"],
+        ["Sprint Intervals", "High Knees", "Box Jump", "Jump Rope", "Mountain Climbers", "Lateral Shuffles"],
+        ["Sprint Intervals", "High Knees", "Depth Jump", "Jump Rope", "Mountain Climbers", "Lateral Shuffles"]
+      ),
+      4: makeDay("Cross Training", "en", "w",
+        ["Rowing", "Cycling", "Swimming", "Stair Climber", "Plank", "Side Plank"],
+        ["Rowing", "Cycling", "Swimming", "Stair Climber", "Plank", "Side Plank"],
+        ["Rowing", "Cycling", "Swimming", "Stair Climber", "Plank with Reach", "Ab Wheel"]
+      ),
+      5: makeDay("Endurance Distance", "en", "w",
+        ["Running", "Plank", "Hip Thrust", "Hip Flexor Stretch", "Calf Raise", "Jump Rope"],
+        ["Running", "Side Plank", "Barbell Hip Thrust", "Pigeon Pose", "Calf Raise", "Jump Rope"],
+        ["Running", "Plank with Reach", "Weighted Hip Thrust", "Hamstring Stretch", "Calf Raise", "Jump Rope"]
+      )
     },
     fl: {
-      1: bld("Hip & Glute Mobility",
-        [ex("Hip Flexor Stretch","Hip Flexors","fx","Reduces anterior tilt."),ex("Pigeon Pose","Glutes & Hips","gl","PNF hip ROM increase."),ex("Glute Bridge","Glutes","gl","Reinforces new ROM."),ex("Figure-4 Stretch","Piriformis","co","Releases deep rotators."),ex("Hip Circle","Hip Joint","gl","Lubricates hip capsule."),ex("Deep Squat Hold","Hip & Ankle","sq","Total lower mobility.")],
-        ["Low Lunge","Double Pigeon","Single-leg Bridge","Supine Figure-4","Hip CARs","Squat+Reach"],
-        ["Lizard Pose","Advanced Pigeon","Weighted Bridge","Thread Needle","Hip 90/90","ATG Squat"]),
-      2: bld("Spine & Thoracic",
-        [ex("Cat-Cow","Lumbar Spine","co","Spinal segment mobility."),ex("Thoracic Rotation","Mid-Back","co","Restores rotation loss."),ex("Superman Hold","Erector Spinae","co","Strengthens extensors."),ex("Bird-Dog","Core & Balance","co","Anti-rotation decompression."),ex("Spinal Twist","Thoracic","co","Mobilises full column."),ex("Cobra Stretch","Lumbar","co","Counteracts flexion posture.")],
-        ["Thread Needle","World's Greatest","T-spine Opener","Dead Bug","Windmill","Upward Dog"],
-        ["Spinal Wave","Full T-Spine Rotation","Back Extension","Hollow Hold","KB Windmill","Wheel Pose"]),
-      3: bld("Hamstring & Lower",
-        [ex("Standing Hamstring","Hamstrings","co","Posterior chain flexibility."),ex("Seated Forward Fold","Hamstrings & Spine","co","Combined spinal stretch."),ex("Downward Dog","Full Posterior","co","Hamstrings calves spine."),ex("Calf Stretch","Calves & Achilles","fx","Prevents injury risk."),ex("Ankle Rotation","Ankle Joint","sq","Joint mobility safety."),ex("Supine Hip Flexion","Hamstrings","gl","Gravity assists lengthening.")],
-        ["PNF Hamstring","Straddle Fold","Three-leg Dog","Soleus Stretch","Ankle CARs","AIS Hamstring"],
-        ["Active Straight Leg","Yoga Splits Prep","Full Downward Dog","Weighted Calf Stretch","Ankle Mobility","Eccentric Hamstring"]),
-      4: bld("Shoulder & Upper",
-        [ex("Shoulder Cross Stretch","Posterior Delt","sh","Reduces chronic tightness."),ex("Thread the Needle","Thoracic & Shoulder","co","Rotation shoulder opening."),ex("Wall Angels","Shoulder Stability","sh","Scapular movement pattern."),ex("Doorway Stretch","Chest & Delt","ub","Opens anterior shoulder."),ex("Neck Rolls","Cervical Spine","co","Releases upper trap."),ex("Wrist Circles","Wrist","ub","Maintains pressing mobility.")],
-        ["Shoulder CARs","Thoracic Open","Band Pull-apart","PNF Chest","Upper Trap","Wrist Flow"],
-        ["Full Shoulder Orbit","Shoulder Dislocate","Scapular Push-up","Sleeper Stretch","Cervical Retraction","Wrist Supination"]),
-      5: bld("Full Body Yoga",
-        [ex("Sun Salutation","Full Body","fx","Warms every joint."),ex("Warrior I","Hips & Shoulders","gl","Opens hips proprioception."),ex("Warrior II","Hips & Legs","gl","Stability inner thigh."),ex("Pigeon Pose","Glutes & Hips","gl","Deepest hip opener."),ex("Child's Pose","Spine & Hips","co","Passive decompression."),ex("Savasana","Full Body","fx","Nervous system integration.")],
-        ["Vinyasa Flow","Warrior III","Extended Side Angle","Thread Needle","Legs Up Wall","Yoga Nidra"],
-        ["Ashtanga Primary","Half Moon","Scorpion Prep","Full Lotus","Restorative Flow","Deep Savasana"]),
+      1: makeDay("Hips & Lower", "fl", "w",
+        ["Hip Flexor Stretch", "Pigeon Pose", "Butterfly Stretch", "Lateral Lunge", "Hamstring Stretch", "Calf Raise"],
+        ["Hip Flexor Stretch", "Pigeon Pose", "Butterfly Stretch", "Curtsy Lunge", "Hamstring Stretch", "Calf Raise"],
+        ["Hip Flexor Stretch", "Pigeon Pose", "Butterfly Stretch", "Jump Lunge", "Hamstring Stretch", "Calf Raise"]
+      ),
+      2: makeDay("Spine & Core", "fl", "w",
+        ["Cat-Cow", "Thoracic Rotation", "Spinal Twist", "Plank", "Side Plank", "Shoulder Mobility"],
+        ["Cat-Cow", "Thoracic Rotation", "Spinal Twist", "Plank", "Side Plank", "Shoulder Mobility"],
+        ["Cat-Cow", "Thoracic Rotation", "Spinal Twist", "Plank with Reach", "Ab Wheel", "Shoulder Mobility"]
+      ),
+      3: makeDay("Full Body Flow", "fl", "w",
+        ["Hip Flexor Stretch", "Pigeon Pose", "Thoracic Rotation", "Hamstring Stretch", "Shoulder Mobility", "Spinal Twist"],
+        ["Hip Flexor Stretch", "Pigeon Pose", "Thoracic Rotation", "Hamstring Stretch", "Shoulder Mobility", "Spinal Twist"],
+        ["Hip Flexor Stretch", "Pigeon Pose", "Thoracic Rotation", "Hamstring Stretch", "Shoulder Mobility", "Spinal Twist"]
+      ),
+      4: makeDay("Recovery Stretch", "fl", "w",
+        ["Butterfly Stretch", "Cat-Cow", "Thoracic Rotation", "Spinal Twist", "Hip Flexor Stretch", "Pigeon Pose"],
+        ["Butterfly Stretch", "Cat-Cow", "Thoracic Rotation", "Spinal Twist", "Hip Flexor Stretch", "Pigeon Pose"],
+        ["Butterfly Stretch", "Cat-Cow", "Thoracic Rotation", "Spinal Twist", "Hip Flexor Stretch", "Pigeon Pose"]
+      ),
+      5: makeDay("Mobility Drills", "fl", "w",
+        ["Lateral Lunge", "Shoulder Mobility", "Cat-Cow", "Spinal Twist", "Hamstring Stretch", "Hip Flexor Stretch"],
+        ["Lateral Lunge", "Shoulder Mobility", "Cat-Cow", "Spinal Twist", "Hamstring Stretch", "Hip Flexor Stretch"],
+        ["Lateral Lunge", "Shoulder Mobility", "Cat-Cow", "Spinal Twist", "Hamstring Stretch", "Hip Flexor Stretch"]
+      )
     },
     br: {
-      1: bld("Strength Circuit A",
-        [ex("Deadlift","Full Body","dl","Highest muscle recruitment."),ex("Goblet Squat","Quads & Glutes","sq","Front-loaded core too."),ex("Push-up","Chest & Triceps","ub","Preserves muscle recomp."),ex("Dumbbell Row","Back","bk","Balanced upper development."),ex("Plank","Core","co","Core transfers compounds."),ex("Hip Thrust","Glutes","gl","Glute preservation recomp.")],
-        ["Romanian DL","Barbell Squat","Pause Push-up","Cable Row","Side Plank","Weighted Hip Thrust"],
-        ["Sumo DL","Front Squat","Weighted Dips","Pendlay Row","Dragon Flag","Barbell Hip Thrust"]),
-      2: bld("HIIT Conditioning",
-        [ex("Jump Rope","Cardiovascular","rn","EPOC muscle preservation."),ex("Burpees","Full Body","ub","Max caloric expenditure."),ex("Mountain Climbers","Core & Cardio","co","Core with conditioning."),ex("High Knees","Hip Flexors","rn","Hip drive mechanisms."),ex("Box Jumps","Explosive Power","rn","Fast-twitch preservation."),ex("Sprint Intervals","VO2 Max","rn","Fat oxidation pathways.")],
-        ["Double Unders","Weighted Burpees","Plyo Climbers","Fast Feet","Plyo Jumps","Hill Sprints"],
-        ["Speed Rope","Burpee Pull-up","Weighted Climbers","Ladder Drills","Depth Jumps","400m Repeats"]),
-      3: bld("Strength Circuit B",
-        [ex("Romanian Deadlift","Hamstrings","dl","Eccentric posterior preservation."),ex("Dumbbell Press","Chest","ub","Progressive overload recomp."),ex("Cable Row","Back","bk","Constant tension isolation."),ex("Bulgarian Split Squat","Glutes & Quads","sq","Best single-leg exercise."),ex("Shoulder Press","Deltoids","sh","Overhead builds width."),ex("Jump Squat","Power","sq","Explosive EPOC finisher.")],
-        ["Stiff-leg DL","Incline Press","Barbell Row","Walking Lunge","Arnold Press","Box Jump"],
-        ["Single-leg DL","Push Press","Pendlay Row","Jump Lunge","Push Jerk","Depth Jump"]),
-      4: bld("HIIT + Core",
-        [ex("Battle Ropes","Cardiovascular","ub","High-intensity conditioning."),ex("Plank Hold","Core","co","Anti-extension development."),ex("Russian Twist","Rotational Core","co","Obliques rotational power."),ex("Mountain Climbers","Core & Cardio","co","Core sustained cardio."),ex("Jump Squat","Legs & Power","sq","Lower body EPOC."),ex("Bicycle Crunch","Core","co","All four core groups.")],
-        ["Slam Ball","Ab Wheel","Weighted Russian Twist","Plyo Push-up","Box Jump","Hanging Knee Raise"],
-        ["KB Swing","Dragon Flag","Pallof Press","Burpee","Depth Jump","Toes-to-Bar"]),
-    },
+      1: makeDay("Strength Compound", "br", "w",
+        ["Barbell Squat", "Deadlift", "Bench Press", "Dumbbell Row", "Plank", "Hip Thrust"],
+        ["Barbell Squat", "Sumo Deadlift", "Incline Press", "Barbell Row", "Side Plank", "Barbell Hip Thrust"],
+        ["Barbell Squat", "Romanian Deadlift", "Overhead Press", "Pull-ups", "Plank with Reach", "Weighted Hip Thrust"]
+      ),
+      2: makeDay("Burn Intervals", "br", "w",
+        ["Jump Rope|1min", "Burpees", "Mountain Climbers", "High Knees", "Lateral Shuffles", "Jump Squat"],
+        ["Jump Rope|1min", "Burpees", "Mountain Climbers", "High Knees", "Skater Jumps", "Box Jump"],
+        ["Jump Rope|1min", "Burpees", "Mountain Climbers", "High Knees", "Tuck Jumps", "Depth Jump"]
+      ),
+      3: makeDay("Strength Accessories", "br", "w",
+        ["Bulgarian Split Squat", "Lat Pulldown", "Shoulder Press", "Cable Fly", "Cable Kickback", "Bicep Curl"],
+        ["Lateral Lunge", "Face Pull", "Arnold Press", "Cable Fly", "Resistance Band Kickback", "Tricep Pushdown"],
+        ["Curtsy Lunge", "Pull-ups", "Lateral Raise", "Cable Fly", "Cable Pull-Through", "Skull Crushers"]
+      ),
+      4: makeDay("HIIT Circuit", "br", "w",
+        ["Sprint Intervals|20s", "Burpees", "Mountain Climbers", "High Knees", "Jump Squat", "Plank"],
+        ["Sprint Intervals|30s", "Burpees", "Mountain Climbers", "High Knees", "Box Jump", "Side Plank"],
+        ["Sprint Intervals|40s", "Burpees", "Mountain Climbers", "High Knees", "Depth Jump", "Plank with Reach"]
+      )
+    }
   },
   m: {
     wl: {
-      1: bld("Lower Body Power",
-        [ex("Barbell Squat","Quads & Core","sq","Maximum lower caloric burn."),ex("Romanian Deadlift","Hamstrings","dl","Posterior preserves muscle."),ex("Leg Press","Quads","sq","Volume no spine load."),ex("Kettlebell Swing","Posterior Chain","kb","Hip hinge metabolic."),ex("Box Jump","Explosive Power","rn","Fast-twitch deficit."),ex("Calf Raise","Calves","sq","Lower leg maintenance.")],
-        ["Pause Squat","Sumo DL","Hack Squat","Weighted KB Swing","Depth Box Jump","Single-leg Calf"],
-        ["Front Squat","Trap Bar DL","Belt Squat","Double KB Swing","Reactive Jump","Loaded Calf"]),
-      2: bld("Upper + Cardio",
-        [ex("Pull-up","Back & Biceps","bk","Upper body preservation."),ex("Bench Press","Chest & Triceps","ub","Chest mass in deficit."),ex("Dumbbell Row","Back","bk","Corrects imbalances."),ex("Battle Ropes","Cardiovascular","ub","EPOC no muscle loss."),ex("Burpees","Full Body","ub","Max caloric expenditure."),ex("Mountain Climbers","Core & Cardio","co","Core cardiovascular.")],
-        ["Weighted Pull-up","Pause Bench","Barbell Row","Assault Bike","Weighted Burpees","Ab Wheel"],
-        ["L-sit Pull-up","Board Press","Pendlay Row","Max Effort Row","Burpee Pull-up","Dragon Flag"]),
-      3: bld("Full Body Metabolic",
-        [ex("Deadlift","Full Body","dl","Hormonal fat-burning response."),ex("Push-up","Chest & Triceps","ub","Accessory mass preservation."),ex("Kettlebell Swing","Posterior Chain","kb","Hip power metabolic."),ex("Sled Push","Full Body Power","sq","High intensity no fatigue."),ex("Jump Rope","Cardio","rn","Sustained EPOC intervals."),ex("Plank","Core","co","Safe metabolic session.")],
-        ["Pause DL","Plyo Push-up","Double KB Swing","Sled Sprint","Double Unders","Side Plank"],
-        ["Sumo DL","Weighted Dips","KB Snatch","Heavy Sled","Assault Bike","Dragon Flag"]),
-      4: bld("HIIT + Core",
-        [ex("Sprint Intervals","VO2 Max","rn","Testosterone fat loss."),ex("Burpees","Full Body","ub","Total-body caloric burn."),ex("Mountain Climbers","Core & Cardio","co","Core conditioning."),ex("Plank","Core Stability","co","Anti-extension compounds."),ex("Hanging Knee Raise","Core","co","Functional abdominal."),ex("Russian Twist","Rotational Core","co","Oblique rotation strength.")],
-        ["Hill Sprints","Weighted Burpees","Bicycle Crunch","Ab Wheel","Hanging Leg Raise","Pallof Press"],
-        ["400m Repeats","Burpee Pull-up","Toes to Bar","Dragon Flag","Weighted Crunch","Landmine Twist"]),
+      1: makeDay("Metabolic Lower", "wl", "m",
+        ["Deadlift", "Barbell Squat", "Leg Press", "Kettlebell Swing", "Box Jump", "Calf Raise"],
+        ["Romanian Deadlift", "Barbell Squat", "Leg Press", "Kettlebell Swing", "Box Jump", "Calf Raise"],
+        ["Deadlift", "Bulgarian Split Squat", "Leg Press", "Kettlebell Swing", "Depth Jump", "Calf Raise"]
+      ),
+      2: makeDay("Upper Metcon", "wl", "m",
+        ["Pull-ups", "Bench Press", "Dumbbell Row", "Battle Ropes", "Burpees", "Mountain Climbers"],
+        ["Pull-ups", "Incline Press", "Barbell Row", "Battle Ropes", "Burpees", "Mountain Climbers"],
+        ["Pull-ups", "Overhead Press", "Barbell Row", "Battle Ropes", "Burpees", "Mountain Climbers"]
+      ),
+      3: makeDay("Full Body Burn", "wl", "m",
+        ["Power Clean", "Push-Ups", "Kettlebell Swing", "Sled Push", "Jump Rope|1min", "Plank"],
+        ["Power Clean", "Dumbbell Row", "Kettlebell Swing", "Sled Push", "Jump Rope|1min", "Side Plank"],
+        ["Power Clean", "Arnold Press", "Kettlebell Swing", "Sled Push", "Jump Rope|1min", "Ab Wheel"]
+      ),
+      4: makeDay("HIIT Cond.", "wl", "m",
+        ["Sprint Intervals|30s", "Burpees", "Mountain Climbers", "Plank", "Battle Ropes", "High Knees"],
+        ["Sprint Intervals|40s", "Burpees", "Mountain Climbers", "Side Plank", "Battle Ropes", "High Knees"],
+        ["Sprint Intervals|45s", "Burpees", "Mountain Climbers", "Ab Wheel", "Battle Ropes", "High Knees"]
+      )
     },
     mb: {
-      1: bld("Chest & Triceps",
-        [ex("Bench Press","Chest & Triceps","ub","8-12 reps optimal hypertrophy."),ex("Incline DB Press","Upper Chest","ub","Varied angle pec."),ex("Cable Fly","Chest","ub","Constant tension isolation."),ex("Tricep Dips","Triceps","ub","2/3 of arm size."),ex("Skull Crushers","Triceps Long Head","ub","Long head complete development."),ex("Push-up","Chest Finisher","ub","Metabolic stress hypertrophy.")],
-        ["Pause Bench","Weighted Incline","Pec Dec","Weighted Dips","CG Bench","Ring Push-up"],
-        ["Board Press","Heavy Incline","Cable Crossover","Belt Dips","JM Press","Plyo Push-up"]),
-      2: bld("Back & Biceps",
-        [ex("Pull-up","Lats & Biceps","bk","Non-negotiable lat width."),ex("Barbell Row","Back Thickness","bk","Heavy rows V-taper."),ex("Lat Pulldown","Lats","bk","Volume post pull-ups."),ex("Cable Row","Mid Back","bk","Superior tension isolation."),ex("Bicep Curl","Biceps","ub","Peak stretch recruitment."),ex("Hammer Curl","Brachialis","ub","Arm thickness grip.")],
-        ["Weighted Pull-up","Pendlay Row","CG Pulldown","Seated Row","Preacher Curl","EZ-bar Curl"],
-        ["L-sit Pull-up","Yates Row","Wide-grip Pulldown","Rope Row","Incline Curl","Drag Curl"]),
-      3: bld("Legs",
-        [ex("Barbell Squat","Quads & Core","sq","King of leg mass."),ex("Leg Press","Quads","sq","Controlled post-squat volume."),ex("Romanian Deadlift","Hamstrings","dl","Eccentric posterior development."),ex("Leg Curl","Hamstrings","dl","Full isolation development."),ex("Leg Extension","Quads","sq","Terminal quad sweep."),ex("Calf Raise","Gastrocnemius","sq","High-rep calf volume.")],
-        ["Pause Squat","Hack Squat","Stiff-leg DL","Nordic Curl","Sissy Squat","Seated Calf"],
-        ["Front Squat","Belt Squat","Snatch DL","GH Raise","Spanish Squat","Donkey Calf"]),
-      4: bld("Shoulders",
-        [ex("Overhead Press","All Delt Heads","sh","Compound before isolation."),ex("Lateral Raise","Lateral Delt","sh","Capped shoulder look."),ex("Front Raise","Anterior Delt","sh","Frontal shoulder development."),ex("Face Pull","Rear Delt","sh","Most important health."),ex("Shrug","Upper Traps","bk","Frames neck upper back."),ex("Arnold Press","All Delt Heads","sh","Recruits all three heads.")],
-        ["Push Press","Cable Lateral","DB Front Raise","Band Pull-apart","Heavy Shrug","DB Arnold"],
-        ["Jerk","Plate Lateral","L-Raise","Rear Delt Row","Trap Bar Shrug","1-arm Arnold"]),
-      5: bld("Arms + Core",
-        [ex("Preacher Curl","Biceps Peak","ub","Locked elbow peak."),ex("Tricep Pushdown","Triceps Lateral Head","ub","Cable lateral isolation."),ex("Hammer Curl","Brachialis","ub","Pushes bicep peak."),ex("Plank","Core","co","Core balanced session."),ex("Ab Wheel","Full Anterior Chain","co","Full wrists-to-hips."),ex("Hanging Knee Raise","Lower Abs","co","Lower ab development.")],
-        ["Incline Curl","CG Bench","Cable Curl","Ab Wheel","Hanging Leg Raise","Bicycle Crunch"],
-        ["Drag Curl","Floor Press","Spider Curl","Dragon Flag","Toes to Bar","Pallof Press"]),
+      1: makeDay("Chest & Triceps", "mb", "m",
+        ["Bench Press", "Incline Press", "Cable Fly", "Tricep Dips", "Skull Crushers", "Push-Ups"],
+        ["Bench Press", "Incline Press", "Cable Fly", "Tricep Dips", "Skull Crushers", "Tricep Pushdown"],
+        ["Bench Press", "Incline Press", "Cable Fly", "Tricep Dips", "Overhead Tricep Extension", "Push-Ups"]
+      ),
+      2: makeDay("Back & Biceps", "mb", "m",
+        ["Pull-ups", "Barbell Row", "Lat Pulldown", "Cable Row", "Bicep Curl", "Preacher Curl"],
+        ["Pull-ups", "Barbell Row", "Lat Pulldown", "Dumbbell Row", "Incline Curl", "Preacher Curl"],
+        ["Pull-ups", "Barbell Row", "Face Pull", "Cable Row", "Bicep Curl", "Incline Curl"]
+      ),
+      3: makeDay("Legs", "mb", "m",
+        ["Barbell Squat", "Leg Press", "Romanian Deadlift", "Leg Curl", "Leg Extension", "Calf Raise"],
+        ["Barbell Squat", "Leg Press", "Romanian Deadlift", "Leg Curl", "Leg Extension", "Calf Raise"],
+        ["Barbell Squat", "Bulgarian Split Squat", "Deadlift", "Leg Curl", "Leg Extension", "Calf Raise"]
+      ),
+      4: makeDay("Shoulders", "mb", "m",
+        ["Overhead Press", "Lateral Raise", "Front Raise", "Face Pull", "Shrug", "Arnold Press"],
+        ["Overhead Press", "Lateral Raise", "Front Raise", "Face Pull", "Shrug", "Arnold Press"],
+        ["Overhead Press", "Lateral Raise", "Front Raise", "Face Pull", "Shrug", "Arnold Press"]
+      ),
+      5: makeDay("Arms + Core", "mb", "m",
+        ["Preacher Curl", "Incline Curl", "Tricep Pushdown", "Overhead Tricep Extension", "Plank", "Ab Wheel"],
+        ["Bicep Curl", "Incline Curl", "Tricep Pushdown", "Skull Crushers", "Side Plank", "Ab Wheel"],
+        ["Preacher Curl", "Bicep Curl", "Tricep Dips", "Overhead Tricep Extension", "Plank with Reach", "Ab Wheel"]
+      )
     },
     st: {
-      1: bld("Squat Day",
-        [ex("Barbell Squat","Quads & Core","sq","85%+ neural adaptation."),ex("Front Squat","Quads & Core","sq","Anterior quad dominance."),ex("Leg Press","Quads","sq","Accessory no spine."),ex("Romanian Deadlift","Hamstrings","dl","Posterior accessory strength."),ex("Calf Raise","Calves","sq","Ankle stability loads."),ex("Plank","Core","co","Bracing transfers squats.")],
-        ["Pause Squat","Zercher Squat","Hack Squat","Stiff DL","Single-leg Calf","Ab Wheel"],
-        ["Competition Squat","Safety Bar Squat","Belt Squat","Deficit DL","Loaded Calf","Dragon Flag"]),
-      2: bld("Press Day",
-        [ex("Bench Press","Chest & Triceps","ub","Primary horizontal strength."),ex("Overhead Press","Shoulders","sh","Functional overhead capacity."),ex("Incline Press","Upper Chest","ub","Complete chest strength."),ex("Tricep Dips","Triceps","ub","Lockout all pressing."),ex("Push-up","Chest Endurance","ub","Shoulder accessory volume."),ex("Face Pull","Rear Delt","sh","Mandatory presser health.")],
-        ["Pause Bench","Push Press","Floor Press","Weighted Dips","Ring Push-up","Band Pull"],
-        ["Board Press","Jerk","CG Bench","Belt Dips","Plyo Push-up","Rear Delt Row"]),
-      3: bld("Hinge Day",
-        [ex("Deadlift","Full Body","dl","King of strength."),ex("Romanian Deadlift","Hamstrings","dl","Eccentric end range."),ex("Good Morning","Erector & Hamstrings","dl","Deadlift alignment."),ex("Barbell Row","Back Thickness","bk","Balances pressing."),ex("Pull-up","Lats & Biceps","bk","Vertical upper back."),ex("Nordic Curl","Hamstrings","dl","Hamstring injury prevention.")],
-        ["Sumo DL","Snatch DL","Stiff DL","Pendlay Row","Weighted Pull-up","GH Raise"],
-        ["Deficit DL","Pause DL","45° Back Ext","Yates Row","L-sit Pull-up","Single-leg RDL"]),
-      4: bld("Power Day",
-        [ex("Power Clean","Full Body Explosive","rn","Rate of force development."),ex("Push Press","Shoulders & Legs","sh","Kinetic chain power."),ex("Box Jump","Explosive Legs","rn","Fast-twitch efficiency."),ex("Farmer Walk","Grip & Core","dl","Real functional strength."),ex("Battle Ropes","Conditioning","ub","Explosive conditioning."),ex("Plank","Core Power","co","Core power transfer.")],
-        ["Hang Clean","Push Jerk","Depth Jump","Double KB Carry","Slam Ball","Ab Wheel"],
-        ["Full Clean","Split Jerk","Reactive Jump","Yoke Walk","Heavy Slam Ball","Dragon Flag"]),
+      1: makeDay("Squat Power", "st", "m",
+        ["Barbell Squat", "Romanian Deadlift", "Leg Press", "Calf Raise", "Plank", "Kettlebell Swing"],
+        ["Barbell Squat", "Power Clean", "Leg Press", "Calf Raise", "Side Plank", "Kettlebell Swing"],
+        ["Barbell Squat", "Deadlift", "Leg Press", "Calf Raise", "Ab Wheel", "Kettlebell Swing"]
+      ),
+      2: makeDay("Press Power", "st", "m",
+        ["Bench Press", "Overhead Press", "Incline Press", "Tricep Dips", "Push-Ups", "Face Pull"],
+        ["Bench Press", "Overhead Press", "Incline Press", "Tricep Dips", "Push-Ups", "Face Pull"],
+        ["Bench Press", "Overhead Press", "Arnold Press", "Tricep Dips", "Push-Ups", "Face Pull"]
+      ),
+      3: makeDay("Hinge Day", "st", "m",
+        ["Deadlift", "Romanian Deadlift", "Barbell Row", "Pull-ups", "Leg Curl", "Bicep Curl"],
+        ["Deadlift", "Power Clean", "Barbell Row", "Pull-ups", "Leg Curl", "Bicep Curl"],
+        ["Deadlift", "Power Clean", "Barbell Row", "Pull-ups", "Leg Curl", "Bicep Curl"]
+      ),
+      4: makeDay("Explosive Power", "st", "m",
+        ["Power Clean", "Overhead Press", "Box Jump", "Battle Ropes", "Plank", "Sled Push"],
+        ["Power Clean", "Overhead Press", "Box Jump", "Battle Ropes", "Side Plank", "Sled Push"],
+        ["Power Clean", "Overhead Press", "Depth Jump", "Battle Ropes", "Ab Wheel", "Sled Push"]
+      )
     },
     en: {
-      1: bld("Aerobic Base",
-        [ex("Long Run","Aerobic Capacity","rn","Zone 2 mitochondrial density."),ex("Pace Intervals","Lactate Threshold","rn","80% pushes threshold."),ex("Hill Sprints","Power Endurance","rn","Uphill without injury."),ex("Hip Flexor Stretch","Hip Flexibility","fx","Running tightens flexors."),ex("Calf Stretch","Achilles","fx","Prevents plantar fasciitis."),ex("Foam Roll","Recovery","co","Accelerates recovery.")],
-        ["Progression Run","LT Intervals","Weighted Hill","Hip CARs","Soleus Stretch","Mobility Flow"],
-        ["Race Pace Run","VO2 Intervals","Sprint Hill","Full Hip Flow","Eccentric Calf","Deep Tissue Roll"]),
-      2: bld("Strength Maintenance",
-        [ex("Barbell Squat","Legs","sq","Heavy squats preserve mass."),ex("Bench Press","Chest","ub","Upper body through endurance."),ex("Pull-up","Back","bk","Non-negotiable retention."),ex("Plank","Core Endurance","co","Running performance foundation."),ex("Romanian Deadlift","Posterior Chain","dl","Prevents running compensations."),ex("Overhead Press","Shoulders","sh","Arm drive requires shoulders.")],
-        ["Pause Squat","Weighted Dips","Weighted Pull-up","Ab Wheel","Stiff DL","Push Press"],
-        ["Front Squat","Ring Dips","L-sit Pull-up","Dragon Flag","Trap Bar DL","Jerk"]),
-      3: bld("Tempo & Intervals",
-        [ex("Tempo Run","Lactate Threshold","rn","85% raises threshold."),ex("Sprint Intervals","VO2 Max","rn","Max effort VO2 ceiling."),ex("Box Jumps","Explosive Power","rn","Plyometrics improve economy."),ex("Battle Ropes","Upper Body Cardio","ub","Upper cardio conditioning."),ex("Jump Rope","Coordination","rn","Foot strike rhythm."),ex("Mountain Climbers","Core & Cardio","co","Core cardio demand.")],
-        ["LT Tempo","Max Sprints","Depth Jumps","Assault Bike","Double Unders","Burpees"],
-        ["VO2 Tempo","400m Repeats","Reactive Jumps","Max Effort Row","Speed Rope","Weighted Burpees"]),
-      4: bld("Cross Training",
-        [ex("Rowing","Full Body Aerobic","bk","Non-impact aerobic."),ex("Cycling","Aerobic Base","rn","Quad cardio no impact."),ex("Swimming","Full Body","ub","Non-impact recovery."),ex("Assault Bike","Max Output","rn","Arms legs max demand."),ex("Stair Climber","Glutes & Cardio","gl","Lower body glute endurance."),ex("Core Circuit","Core Endurance","co","Core form in fatigue.")],
-        ["Row Intervals","Bike Race","Swim Intervals","Max Assault","Weighted Step","Plank Complex"],
-        ["Max Row","Criterium Ride","Open Water","Assault Max","Loaded Stair","Dragon Flag"]),
-      5: bld("Long Session",
-        [ex("Long Run","Aerobic Capacity","rn","Distance psychological endurance."),ex("Walk Intervals","Active Recovery","rn","Walk breaks manage lactate."),ex("Hip Mobility","Hip Flexibility","fx","Long runs stiffen hips."),ex("Quad Stretch","Quad Flexibility","fx","Prevents knee tracking."),ex("Shoulder Mobility","Upper Body","sh","Arm drive long runs."),ex("Breathing Drills","Respiratory","co","Diaphragmatic efficiency.")],
-        ["Extended Run","Fast Walk","Hip CARs","PNF Quad","Shoulder Flow","Box Breathing"],
-        ["Race Simulation","Active Recovery Run","Full Hip Flow","AIS Quad","Full Shoulder CARs","Apnea Training"]),
+      1: makeDay("Zone 2 Aerobic", "en", "m",
+        ["Running", "Stair Climber", "Rowing", "Jump Rope", "Cycling", "Swimming"],
+        ["Running", "Stair Climber", "Rowing", "Jump Rope", "Cycling", "Swimming"],
+        ["Running", "Stair Climber", "Rowing", "Jump Rope", "Cycling", "Swimming"]
+      ),
+      2: makeDay("Strength Base", "en", "m",
+        ["Barbell Squat", "Bench Press", "Pull-ups", "Plank", "Romanian Deadlift", "Overhead Press"],
+        ["Barbell Squat", "Bench Press", "Pull-ups", "Side Plank", "Romanian Deadlift", "Overhead Press"],
+        ["Barbell Squat", "Bench Press", "Pull-ups", "Ab Wheel", "Deadlift", "Overhead Press"]
+      ),
+      3: makeDay("Interval Threshold", "en", "m",
+        ["Sprint Intervals", "Box Jump", "Battle Ropes", "Jump Rope", "Mountain Climbers", "Running"],
+        ["Sprint Intervals", "Box Jump", "Battle Ropes", "Jump Rope", "Mountain Climbers", "Running"],
+        ["Sprint Intervals", "Depth Jump", "Battle Ropes", "Jump Rope", "Mountain Climbers", "Running"]
+      ),
+      4: makeDay("Capacity Cross", "en", "m",
+        ["Rowing", "Cycling", "Swimming", "Stair Climber", "Plank", "Side Plank"],
+        ["Rowing", "Cycling", "Swimming", "Stair Climber", "Plank", "Side Plank"],
+        ["Rowing", "Cycling", "Swimming", "Stair Climber", "Ab Wheel", "Side Plank"]
+      ),
+      5: makeDay("Long Haul", "en", "m",
+        ["Running", "Plank", "Hip Flexor Stretch", "Hamstring Stretch", "Shoulder Mobility", "Cat-Cow"],
+        ["Running", "Side Plank", "Hip Flexor Stretch", "Hamstring Stretch", "Shoulder Mobility", "Cat-Cow"],
+        ["Running", "Ab Wheel", "Hip Flexor Stretch", "Hamstring Stretch", "Shoulder Mobility", "Cat-Cow"]
+      )
     },
     fl: {
-      1: bld("Hip Flexors & Glutes",
-        [ex("Hip Circle","Hip Joint","gl","Lubricates hip capsule."),ex("Pigeon Pose","Glutes & Rotators","gl","Deep hip piriformis."),ex("Frog Stretch","Adductors & Hips","gl","Wide groin opens hip."),ex("Glute Bridge","Glute Activation","gl","Post-stretch reinforces ROM."),ex("Lateral Hip Stretch","IT Band","gl","Releases athletic tightness."),ex("Deep Squat Hold","Hip & Ankle","sq","Total lower mobility.")],
-        ["Hip CARs","Double Pigeon","Wide Frog","Single-leg Bridge","IT Band Cross","ATG Squat"],
-        ["Hip 90/90","Advanced Pigeon","Horse Stance","Weighted Bridge","Hip Rotator CARs","Loaded ATG"]),
-      2: bld("Thoracic & Shoulders",
-        [ex("Thoracic Rotation","Mid-Back","co","Restores pressing rotation."),ex("Wall Angels","Scapular Mobility","sh","Correct scapular move."),ex("Shoulder Pass-through","Full Shoulder ROM","sh","Assesses flexibility."),ex("Cat-Cow","Spinal Mobility","co","Rhythmic spinal flexion."),ex("Thread the Needle","Thoracic Rotation","co","Mid-back not lumbar."),ex("Doorway Stretch","Pec & Delt","ub","Opens anterior shoulder.")],
-        ["T-spine CARs","Band Wall Angels","Barbell Pass","Spinal Wave","Twin Needle","PNF Chest"],
-        ["Full Rotation CARs","Shoulder Dislocate","Stick Overhead","Full Spinal Wave","Needle Flow","Rack Chest"]),
-      3: bld("Ankle & Knee",
-        [ex("Ankle Circles","Ankle Dorsiflexion","sq","Restores squat ROM."),ex("Knee Hugs","Hip & Knee Flexion","sq","Sagittal plane mobility."),ex("Calf Stretch","Gastrocnemius","fx","Ankle range of motion."),ex("Quad Stretch","Quad & Hip Flexor","sq","Reduces pelvic tilt."),ex("Figure-4 Stretch","Piriformis","co","Releases sciatic irritation."),ex("Lateral Lunge","Adductors","sq","Dynamic inner thigh.")],
-        ["Ankle CARs","90/90 Knee","Eccentric Calf","PNF Quad","Hip Figure-4","Deep Lateral Lunge"],
-        ["Ankle Mobility Drill","Knee CARs","Loaded Calf Stretch","Contract-Relax Quad","Pigeon Figure-4","Active Lateral Lunge"]),
-      4: bld("Full Lower Body Flow",
-        [ex("RDL Stretch","Hamstrings","dl","Controlled hinge mobility."),ex("Hip Hinge Drill","Hip Flexors","gl","Correct hip patterns."),ex("Hamstring Sweep","Hamstrings","co","Dynamic posterior chain."),ex("Pigeon Pose","Glutes","gl","Gold standard external."),ex("Hip Flexor Lunge","Hip Flexors","gl","Deep functional lunge."),ex("Child's Pose","Spine & Hips","co","Passive decompression.")],
-        ["Loaded RDL Stretch","Hip Hinge Flow","PNF Hamstring","Pigeon+Rotation","Low Lunge Flow","Extended Child's Pose"],
-        ["Barbell RDL Stretch","Hip Hinge Complex","AIS Hamstring","Pigeon+Bind","Lizard Lunge","Yoga Block Child's Pose"]),
-      5: bld("Dynamic Activation",
-        [ex("Leg Swings","Hip Flexion","gl","Primes hip flexors."),ex("Arm Circles","Shoulder Joint","sh","Warms rotator cuff."),ex("Hip Rotations","Hip Joint","gl","Warms hip capsule."),ex("High Knees","Hip Flexors & Cardio","rn","Dynamic hip cardio."),ex("Butt Kicks","Quad & Hamstring","rn","Dynamic hamstring warm."),ex("Dynamic Lunge","Hips & Legs","sq","Lower body priming.")],
-        ["Lateral Leg Swings","Large Arm Circles","Hip Orbit","Fast High Knees","Explosive Butt Kicks","Walking Lunge"],
-        ["Multi-plane Leg Swings","Shoulder CARs","Hip 3D Flow","Knee Drive","Hamstring Kick","Jump Lunge"]),
+      1: makeDay("Dynamic Legs", "fl", "m",
+        ["Hip Flexor Stretch", "Hamstring Stretch", "Lateral Lunge", "Calf Raise", "Pigeon Pose", "Butterfly Stretch"],
+        ["Hip Flexor Stretch", "Hamstring Stretch", "Lateral Lunge", "Calf Raise", "Pigeon Pose", "Butterfly Stretch"],
+        ["Hip Flexor Stretch", "Hamstring Stretch", "Lateral Lunge", "Calf Raise", "Pigeon Pose", "Butterfly Stretch"]
+      ),
+      2: makeDay("Thoracic Flow", "fl", "m",
+        ["Thoracic Rotation", "Shoulder Mobility", "Cat-Cow", "Spinal Twist", "Face Pull", "Plank"],
+        ["Thoracic Rotation", "Shoulder Mobility", "Cat-Cow", "Spinal Twist", "Face Pull", "Side Plank"],
+        ["Thoracic Rotation", "Shoulder Mobility", "Cat-Cow", "Spinal Twist", "Face Pull", "Ab Wheel"]
+      ),
+      3: makeDay("Agility Prep", "fl", "m",
+        ["Jump Rope", "Box Jump", "High Knees", "Mountain Climbers", "Lateral Shuffles", "Sprint Intervals"],
+        ["Jump Rope", "Box Jump", "High Knees", "Mountain Climbers", "Lateral Shuffles", "Sprint Intervals"],
+        ["Jump Rope", "Depth Jump", "High Knees", "Mountain Climbers", "Lateral Shuffles", "Sprint Intervals"]
+      ),
+      4: makeDay("Deep Opening", "fl", "m",
+        ["Pigeon Pose", "Butterfly Stretch", "Hip Flexor Stretch", "Hamstring Stretch", "Spinal Twist", "Cat-Cow"],
+        ["Pigeon Pose", "Butterfly Stretch", "Hip Flexor Stretch", "Hamstring Stretch", "Spinal Twist", "Cat-Cow"],
+        ["Pigeon Pose", "Butterfly Stretch", "Hip Flexor Stretch", "Hamstring Stretch", "Spinal Twist", "Cat-Cow"]
+      ),
+      5: makeDay("Full Mobility", "fl", "m",
+        ["Thoracic Rotation", "Shoulder Mobility", "Lateral Lunge", "Calf Raise", "Face Pull", "Plank"],
+        ["Thoracic Rotation", "Shoulder Mobility", "Lateral Lunge", "Calf Raise", "Face Pull", "Side Plank"],
+        ["Thoracic Rotation", "Shoulder Mobility", "Lateral Lunge", "Calf Raise", "Face Pull", "Ab Wheel"]
+      )
     },
     br: {
-      1: bld("Upper Push Power",
-        [ex("Bench Press","Chest & Triceps","ub","Compound strength muscle."),ex("Overhead Press","Shoulders","sh","Functional shoulder mass."),ex("Incline DB Press","Upper Chest","ub","Complete upper hypertrophy."),ex("Push-up","Chest Finisher","ub","Volume no joint stress."),ex("Tricep Dips","Triceps","ub","Arm mass lockout."),ex("Battle Ropes","Conditioning","ub","Upper HIIT metabolic.")],
-        ["Pause Bench","Push Press","Weighted Incline","Ring Push-up","Weighted Dips","Assault Bike"],
-        ["Board Press","Jerk","Heavy Incline","Plyo Push-up","Belt Dips","Max Effort Row"]),
-      2: bld("Lower Body Strength",
-        [ex("Barbell Squat","Quads & Glutes","sq","Largest stimulus recomp."),ex("Deadlift","Full Body","dl","Maximum muscle recomp."),ex("Romanian Deadlift","Hamstrings","dl","Posterior chain isolation."),ex("Leg Press","Quads","sq","Additional quad volume."),ex("Kettlebell Swing","Hip Power & Cardio","kb","Explosive hip conditioning."),ex("Box Jump","Explosive Power","rn","Fast-twitch preservation.")],
-        ["Pause Squat","Sumo DL","Stiff DL","Hack Squat","Double KB Swing","Depth Jump"],
-        ["Front Squat","Trap Bar DL","Single-leg DL","Belt Squat","KB Snatch","Reactive Jump"]),
-      3: bld("Metabolic HIIT",
-        [ex("Sprint Intervals","VO2 Max & Fat Burn","rn","36h EPOC post-session."),ex("Burpees","Full Body Metcon","ub","Highest caloric bodyweight."),ex("Battle Ropes","Upper Body Cardio","ub","Sustained upper cardio."),ex("Mountain Climbers","Core & Cardio","co","Core in conditioning."),ex("Sled Push","Full Body Power","sq","High intensity functional."),ex("Jump Rope","Cardio Finisher","rn","Compact calorie burn.")],
-        ["Hill Sprints","Weighted Burpees","Assault Bike","Burpee to Pull-up","Heavy Sled","Double Unders"],
-        ["400m Repeats","Burpee Complex","Max Row","Toes to Bar","Prowler Push","Speed Rope"]),
-      4: bld("Upper Pull + Core",
-        [ex("Pull-up","Back & Biceps","bk","Best upper pulling."),ex("Barbell Row","Back Thickness","bk","Mid-back mass."),ex("Cable Row","Back","bk","Cable constant tension."),ex("Plank","Core Stability","co","Anti-extension complete."),ex("Hanging Knee Raise","Lower Abs","co","Hanging lower ab."),ex("Russian Twist","Rotational Core","co","Oblique rotational strength.")],
-        ["Weighted Pull-up","Pendlay Row","Seated Row","Ab Wheel","Hanging Leg Raise","Pallof Press"],
-        ["L-sit Pull-up","Yates Row","Rope Row","Dragon Flag","Toes to Bar","Landmine Twist"]),
-    },
-  },
+      1: makeDay("Upper Push/Pull", "br", "m",
+        ["Bench Press", "Overhead Press", "Pull-ups", "Barbell Row", "Tricep Dips", "Battle Ropes"],
+        ["Incline Press", "Overhead Press", "Pull-ups", "Dumbbell Row", "Tricep Dips", "Battle Ropes"],
+        ["Bench Press", "Arnold Press", "Pull-ups", "Barbell Row", "Skull Crushers", "Battle Ropes"]
+      ),
+      2: makeDay("Lower Strength", "br", "m",
+        ["Barbell Squat", "Deadlift", "Romanian Deadlift", "Leg Press", "Kettlebell Swing", "Box Jump"],
+        ["Barbell Squat", "Deadlift", "Romanian Deadlift", "Leg Press", "Kettlebell Swing", "Box Jump"],
+        ["Barbell Squat", "Power Clean", "Romanian Deadlift", "Bulgarian Split Squat", "Kettlebell Swing", "Depth Jump"]
+      ),
+      3: makeDay("HIIT Metcon", "br", "m",
+        ["Sprint Intervals|30s", "Burpees", "Mountain Climbers", "Battle Ropes", "Sled Push", "Jump Rope|1min"],
+        ["Sprint Intervals|40s", "Burpees", "Mountain Climbers", "Battle Ropes", "Sled Push", "Jump Rope|1min"],
+        ["Sprint Intervals|45s", "Burpees", "Mountain Climbers", "Battle Ropes", "Sled Push", "Jump Rope|1min"]
+      ),
+      4: makeDay("Full Accessories", "br", "m",
+        ["Pull-ups", "Barbell Row", "Cable Row", "Plank", "Face Pull", "Ab Wheel"],
+        ["Pull-ups", "Dumbbell Row", "Face Pull", "Side Plank", "Bicep Curl", "Ab Wheel"],
+        ["Pull-ups", "Barbell Row", "Cable Row", "Plank with Reach", "Preacher Curl", "Ab Wheel"]
+      )
+    }
+  }
 };
 
 export const SLUG_MAP: Record<string, string> = {

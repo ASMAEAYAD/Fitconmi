@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { SiteFooter, SiteNavbar } from "../components/site-chrome";
-import { PROG_DATA } from "./data";
+import { PROG_DATA, Exd } from "./data";
 
 /* ── Types ── */
 type G = "w" | "m";
@@ -255,9 +255,8 @@ function S4({ prog, g, days, weeks, aDay, setADay, curWk, setCurWk, onBack }: { 
   const variation = getVariation(curWk);
   const rawDay = progDays[aDay + 1];
   const dayName = rawDay?.name ?? "Training Day";
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const exMap = (rawDay?.exercises ?? { A: [], B: [], C: [] }) as any;
-  const dayExercises: { name: string; muscle: string; sci: string; img: string }[] = exMap[variation] ?? exMap["A"] ?? [];
+  const exMap = rawDay?.exercises ?? { A: [], B: [], C: [] };
+  const dayExercises: Exd[] = (exMap as any)[variation] ?? exMap["A"] ?? [];
   const varInfo = VAR_LABEL[variation];
   const nutrIcons = NUTR_ICONS[`${g}-${prog.slug}`] ?? [["🥩", "Protein"], ["💧", "Hydration"], ["💤", "Recovery"]];
 
@@ -380,7 +379,7 @@ function S4({ prog, g, days, weeks, aDay, setADay, curWk, setCurWk, onBack }: { 
                     {PHASE_EMOJI[phase]} {PHASES[phase][0]}
                   </span>
                 </div>
-                <p style={{ color: "#9ca3af", fontSize: "0.85rem", margin: "0.4rem 0 0" }}>{SETS[phase]} · {dayExercises.length} exercises</p>
+                <p style={{ color: "#9ca3af", fontSize: "0.85rem", margin: "0.4rem 0 0" }}>{dayExercises.length} exercises</p>
               <p style={{ fontSize: "0.75rem", margin: "0.3rem 0 0", color: varInfo.color, fontWeight: 600 }}>{varInfo.emoji} Week {curWk} — {varInfo.label}</p>
               </div>
 
@@ -393,10 +392,10 @@ function S4({ prog, g, days, weeks, aDay, setADay, curWk, setCurWk, onBack }: { 
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem", marginBottom: "0.25rem" }}>
                         <h3 style={{ fontFamily: "var(--font-display)", fontSize: "1rem", margin: 0, fontWeight: 700, letterSpacing: "0.03em", lineHeight: 1.2 }}>{ex.name}</h3>
-                        <span style={{ background: "rgba(163,230,53,0.12)", color: "#a3e635", border: "1px solid rgba(163,230,53,0.25)", borderRadius: "9999px", padding: "0.15rem 0.6rem", fontSize: "0.72rem", fontWeight: 700, flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>{SETS[phase]}</span>
+                        <span style={{ background: "rgba(163,230,53,0.12)", color: "#a3e635", border: "1px solid rgba(163,230,53,0.25)", borderRadius: "9999px", padding: "0.15rem 0.6rem", fontSize: "0.72rem", fontWeight: 700, flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>{ex.sets}×{ex.reps}</span>
                       </div>
                       <p style={{ color: "#a3e635", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 0.35rem" }}>{ex.muscle}</p>
-                      <p style={{ color: "#9ca3af", fontSize: "0.8rem", margin: 0, lineHeight: 1.5, fontStyle: "italic", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ex.sci}</p>
+                      <p style={{ color: "#9ca3af", fontSize: "0.8rem", margin: 0, lineHeight: 1.5, fontStyle: "italic", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ex.explanation}</p>
                     </div>
                   </div>
                 ))}
