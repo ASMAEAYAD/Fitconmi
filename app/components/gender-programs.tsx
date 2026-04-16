@@ -10,33 +10,37 @@ type DurCfg = { days: Days; weeks: Weeks };
 type Prog = { slug: string; name: string; image: string; goal: string; kw: string[]; rec?: boolean };
 
 const PI: Record<string, string> = {
-  "weight-loss-w": "https://images.unsplash.com/photo-1549570652-97324981a6fd?w=1200&q=80",
-  "weight-loss-m": "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=1200&q=80",
-  "muscle-building-w": "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=1200&q=80",
-  "muscle-building-m": "https://images.unsplash.com/photo-1599058917212-d750089bc07e?w=1200&q=80",
-  "strength-training": "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=1200&q=80",
-  endurance: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1200&q=80",
-  flexibility: "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=1200&q=80",
-  "body-recomposition": "https://images.unsplash.com/photo-1517964603305-11c0f6f66012?w=1200&q=80",
+  "weight-loss-w": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&q=80&fit=crop&crop=faces",
+  "weight-loss-m": "https://images.unsplash.com/photo-1549060279-7e168fcee0c2?w=1200&q=80&fit=crop&crop=faces",
+  "muscle-building-w": "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=1200&q=80&fit=crop&crop=faces",
+  "muscle-building-m": "https://images.unsplash.com/photo-1583454155184-870a1f63aebc?w=1200&q=80&fit=crop&crop=faces",
+  "strength-training-w": "https://images.unsplash.com/photo-1574680178050-55c6a6a96e0a?w=1200&q=80&fit=crop&crop=faces",
+  "strength-training-m": "https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=1200&q=80&fit=crop&crop=faces",
+  "endurance-w": "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=1200&q=80&fit=crop&crop=faces",
+  "endurance-m": "https://images.unsplash.com/photo-1556746834-1cb5b8fabd54?w=1200&q=80&fit=crop&crop=faces",
+  flexibility: "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=1200&q=80&fit=crop&crop=faces",
+  "flexibility-m": "https://images.unsplash.com/photo-1607962837359-5e7e89f86776?w=1200&q=80&fit=crop&crop=faces",
+  "body-recomposition-w": "https://images.unsplash.com/photo-1599058917212-d750089bc07e?w=1200&q=80&fit=crop&crop=faces",
+  "body-recomposition-m": "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=1200&q=80&fit=crop&crop=faces",
 };
 const progImg = (slug: string, g: Gender) =>
-  PI[`${slug}-${g[0]}`] ?? PI[slug] ?? PI["strength-training"];
+  PI[`${slug}-${g[0]}`] ?? PI[slug] ?? PI["muscle-building-m"];
 
 const WOMEN: Prog[] = [
   { slug: "weight-loss", name: "Weight Loss", image: PI["weight-loss-w"], goal: "Lose fat, preserve lean muscle", kw: ["Hip thrusts", "Romanian deadlifts", "Jump rope intervals", "Cable kickbacks"], rec: true },
-  { slug: "body-recomposition", name: "Body Recomposition", image: PI["body-recomposition"], goal: "Lose fat and build lean muscle", kw: ["Full-body circuits", "Compound lifts", "HIIT finishers", "Goblet squats"], rec: true },
+  { slug: "body-recomposition", name: "Body Recomposition", image: PI["body-recomposition-w"], goal: "Lose fat and build lean muscle", kw: ["Full-body circuits", "Compound lifts", "HIIT finishers", "Goblet squats"], rec: true },
   { slug: "flexibility", name: "Flexibility & Mobility", image: PI["flexibility"], goal: "Improve range of motion & posture", kw: ["Hip flexor stretch", "Pigeon pose", "Thoracic rotations", "Shoulder flows"], rec: true },
   { slug: "muscle-building", name: "Toning & Muscle", image: PI["muscle-building-w"], goal: "Build lean muscle, improve composition", kw: ["Goblet squats", "DB lunges", "Lat pulldowns", "Incline press"] },
-  { slug: "endurance", name: "Endurance", image: PI["endurance"], goal: "Build cardiovascular fitness", kw: ["Running intervals", "Cycling", "Rowing", "Bodyweight circuits"] },
-  { slug: "strength-training", name: "Strength Training", image: PI["strength-training"], goal: "Build functional strength & confidence", kw: ["Barbell squat", "Deadlift", "Bench press", "Pull-ups"] },
+  { slug: "endurance", name: "Endurance", image: PI["endurance-w"], goal: "Build cardiovascular fitness", kw: ["Running intervals", "Cycling", "Rowing", "Bodyweight circuits"] },
+  { slug: "strength-training", name: "Strength Training", image: PI["strength-training-w"], goal: "Build functional strength & confidence", kw: ["Barbell squat", "Deadlift", "Bench press", "Pull-ups"] },
 ];
 const MEN: Prog[] = [
   { slug: "muscle-building", name: "Hypertrophy", image: PI["muscle-building-m"], goal: "Maximise muscle size & definition", kw: ["Bench press", "Barbell rows", "Pull-ups", "Preacher curls"], rec: true },
-  { slug: "strength-training", name: "Strength Training", image: PI["strength-training"], goal: "Build maximum strength across all lifts", kw: ["Squat", "Deadlift", "Bench press", "Power clean"], rec: true },
-  { slug: "body-recomposition", name: "Body Recomposition", image: PI["body-recomposition"], goal: "Build muscle and burn fat together", kw: ["Compound lifts", "Supersets", "HIIT", "Loaded carries"], rec: true },
+  { slug: "strength-training", name: "Strength Training", image: PI["strength-training-m"], goal: "Build maximum strength across all lifts", kw: ["Squat", "Deadlift", "Bench press", "Power clean"], rec: true },
+  { slug: "body-recomposition", name: "Body Recomposition", image: PI["body-recomposition-m"], goal: "Build muscle and burn fat together", kw: ["Compound lifts", "Supersets", "HIIT", "Loaded carries"], rec: true },
   { slug: "weight-loss", name: "Weight Loss", image: PI["weight-loss-m"], goal: "Burn fat, maintain muscle mass", kw: ["Barbell deadlifts", "Weighted squats", "Battle ropes", "Sled push"] },
-  { slug: "endurance", name: "Endurance", image: PI["endurance"], goal: "Build elite cardiovascular capacity", kw: ["Long runs", "Interval sprints", "Cycling", "Rowing"] },
-  { slug: "flexibility", name: "Flexibility & Mobility", image: PI["flexibility"], goal: "Improve performance, eliminate injury", kw: ["Hip mobility drills", "Thoracic rotations", "Ankle mobility", "Dynamic warm-ups"] },
+  { slug: "endurance", name: "Endurance", image: PI["endurance-m"], goal: "Build elite cardiovascular capacity", kw: ["Long runs", "Interval sprints", "Cycling", "Rowing"] },
+  { slug: "flexibility", name: "Flexibility & Mobility", image: PI["flexibility-m"], goal: "Improve performance, eliminate injury", kw: ["Hip mobility drills", "Thoracic rotations", "Ankle mobility", "Dynamic warm-ups"] },
 ];
 
 const SCIENCE: Record<string, { p1: string; p2: string; kp: string; kpv: string }> = {
@@ -126,8 +130,8 @@ function GenderQuiz({ onChoose }: { onChoose: (g: Gender) => void }) {
         <p style={{ color: "#9ca3af", marginTop: "0.75rem" }}>Choose to see programs personalised for your goals</p>
       </div>
       <div className="gq" style={{ display: "grid", gridTemplateColumns: "1fr", flex: 1, minHeight: "70vh" }}>
-        <HeroCard image="https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&q=80" title="I'm a Woman" sub="Programs designed for female physiology" onClick={() => onChoose("woman")} aria="Select women's programs" />
-        <HeroCard image="https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=800&q=80" title="I'm a Man" sub="Programs built for male performance" onClick={() => onChoose("man")} aria="Select men's programs" />
+        <HeroCard image="https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=1200&q=80&fit=crop&crop=faces" title="I'm a Woman" sub="Programs designed for female physiology" onClick={() => onChoose("woman")} aria="Select women's programs" />
+        <HeroCard image="https://images.unsplash.com/photo-1583454155184-870a1f63aebc?w=1200&q=80&fit=crop&crop=faces" title="I'm a Man" sub="Programs built for male performance" onClick={() => onChoose("man")} aria="Select men's programs" />
       </div>
       <style>{`@media(min-width:768px){.gq{grid-template-columns:1fr 1fr!important}}`}</style>
     </section>

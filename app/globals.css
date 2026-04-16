@@ -5,6 +5,8 @@
   --foreground: #ffffff;
   --font-display: "Bebas Neue", sans-serif;
   --font-body: "Inter", sans-serif;
+  --accent: #a3e635;
+  --accent-glow: rgba(163, 230, 53, 0.35);
 }
 
 @theme inline {
@@ -31,6 +33,171 @@ html {
   scroll-behavior: smooth;
 }
 
+/* ── Gradient text utility ── */
+.gradient-text {
+  background: linear-gradient(135deg, #a3e635 0%, #84cc16 50%, #65a30d 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-hero {
+  background: linear-gradient(90deg, #a3e635 0%, #f97316 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Hero fade-in + slide-up ── */
+@keyframes heroSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes heroFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes borderGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(163, 230, 53, 0); }
+  50% { box-shadow: 0 0 28px 4px rgba(163, 230, 53, 0.18); }
+}
+
+@keyframes navUnderline {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes floatBadge {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* ── Animation classes ── */
+.anim-hero-badge {
+  animation: heroSlideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.1s;
+}
+
+.anim-hero-title {
+  animation: heroSlideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.25s;
+}
+
+.anim-hero-subtitle {
+  animation: heroSlideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.4s;
+}
+
+.anim-hero-cta {
+  animation: heroSlideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.55s;
+}
+
+.anim-hero-image {
+  animation: heroFadeIn 1s ease both;
+}
+
+/* ── Card scroll reveal ── */
+.reveal-card {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-card.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Stagger delays for grid items ── */
+.stagger-1 { transition-delay: 0.05s; }
+.stagger-2 { transition-delay: 0.12s; }
+.stagger-3 { transition-delay: 0.19s; }
+.stagger-4 { transition-delay: 0.26s; }
+.stagger-5 { transition-delay: 0.33s; }
+.stagger-6 { transition-delay: 0.4s; }
+
+/* ── Nav link underline animation ── */
+.nav-link {
+  position: relative;
+}
+.nav-link::after {
+  content: "";
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: #a3e635;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.nav-link:hover::after {
+  width: 100%;
+}
+
+/* ── Button glow ── */
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 32px var(--accent-glow), 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* ── Program card premium hover ── */
+.prog-card {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+.prog-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 0 40px rgba(163, 230, 53, 0.22),
+              0 20px 60px rgba(0, 0, 0, 0.5);
+}
+.prog-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(163, 230, 53, 0.08), transparent);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+.prog-card:hover::before {
+  opacity: 1;
+}
+
+/* ── Stat count-up animation ── */
+.stat-visible {
+  animation: countUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 @media print {
   .no-print {
     display: none !important;
@@ -46,5 +213,25 @@ html {
     opacity: 1 !important;
     overflow: visible !important;
     margin-top: 1rem !important;
+  }
+}
+
+/* ── Respect user motion preferences ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+
+  .reveal-card {
+    opacity: 1;
+    transform: none;
   }
 }

@@ -14,25 +14,28 @@ type Ex = [string, string, string, string];
 
 /* ── Programs ── */
 type Prog = { slug: string; name: string; diff: string; goal: string; img: string };
+// ── Women's programs — all featuring women performing the relevant exercise ──
 const WPR: Prog[] = [
-  { slug: "wl", name: "Weight Loss", diff: "Beginner", goal: "Lose fat, preserve muscle", img: "https://images.unsplash.com/photo-1549570652-97324981a6fd?w=800&q=80" },
-  { slug: "mb", name: "Muscle Building", diff: "Intermediate", goal: "Build lean muscle", img: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&q=80" },
-  { slug: "st", name: "Strength Training", diff: "Advanced", goal: "Build functional strength", img: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=800&q=80" },
-  { slug: "en", name: "Endurance", diff: "Intermediate", goal: "Cardiovascular fitness", img: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&q=80" },
-  { slug: "fl", name: "Flexibility", diff: "Beginner", goal: "Range of motion & posture", img: "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=800&q=80" },
-  { slug: "br", name: "Body Recomp", diff: "Intermediate", goal: "Lose fat, gain muscle", img: "https://images.unsplash.com/photo-1594737625785-a6cbdabd333c?w=800&q=80" },
+  { slug: "wl", name: "Weight Loss", diff: "Beginner", goal: "Lose fat, preserve muscle", img: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80&fit=crop&crop=faces" },
+  { slug: "mb", name: "Muscle Building", diff: "Intermediate", goal: "Build lean muscle", img: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&q=80&fit=crop&crop=faces" },
+  { slug: "st", name: "Strength Training", diff: "Advanced", goal: "Build functional strength", img: "https://images.unsplash.com/photo-1574680178050-55c6a6a96e0a?w=800&q=80&fit=crop&crop=faces" },
+  { slug: "en", name: "Endurance", diff: "Intermediate", goal: "Cardiovascular fitness", img: "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=800&q=80&fit=crop&crop=faces" },
+  { slug: "fl", name: "Flexibility", diff: "Beginner", goal: "Range of motion & posture", img: "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=800&q=80&fit=crop&crop=faces" },
+  { slug: "br", name: "Body Recomp", diff: "Intermediate", goal: "Lose fat, gain muscle", img: "https://images.unsplash.com/photo-1599058917212-d750089bc07e?w=800&q=80&fit=crop&crop=faces" },
 ];
+// ── Men's programs — all featuring men performing the relevant exercise ──
 const MPR: Prog[] = [
-  { slug: "wl", name: "Weight Loss", diff: "Beginner", goal: "Burn fat, maintain muscle", img: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=800&q=80" },
-  { slug: "mb", name: "Hypertrophy", diff: "Intermediate", goal: "Maximise muscle size", img: "https://images.unsplash.com/photo-1599058917212-d750089bc07e?w=800&q=80" },
-  { slug: "st", name: "Strength Training", diff: "Advanced", goal: "Maximum strength", img: "https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=800&q=80" },
-  { slug: "en", name: "Endurance", diff: "Intermediate", goal: "Elite cardiovascular capacity", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80" },
-  { slug: "fl", name: "Flexibility", diff: "Beginner", goal: "Athletic performance & injury prevention", img: "https://images.unsplash.com/photo-1517964603305-11c0f6f66012?w=800&q=80" },
-  { slug: "br", name: "Body Recomp", diff: "Intermediate", goal: "Build muscle, burn fat", img: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=800&q=80" },
+  { slug: "wl", name: "Weight Loss", diff: "Beginner", goal: "Burn fat, maintain muscle", img: "https://images.unsplash.com/photo-1549060279-7e168fcee0c2?w=800&q=80&fit=crop&crop=faces" },
+  { slug: "mb", name: "Hypertrophy", diff: "Intermediate", goal: "Maximise muscle size", img: "https://images.unsplash.com/photo-1583454155184-870a1f63aebc?w=800&q=80&fit=crop&crop=faces" },
+  { slug: "st", name: "Strength Training", diff: "Advanced", goal: "Maximum strength", img: "https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=800&q=80&fit=crop&crop=faces" },
+  { slug: "en", name: "Endurance", diff: "Intermediate", goal: "Elite cardiovascular capacity", img: "https://images.unsplash.com/photo-1556746834-1cb5b8fabd54?w=800&q=80&fit=crop&crop=faces" },
+  { slug: "fl", name: "Flexibility", diff: "Beginner", goal: "Athletic performance & injury prevention", img: "https://images.unsplash.com/photo-1607962837359-5e7e89f86776?w=800&q=80&fit=crop&crop=faces" },
+  { slug: "br", name: "Body Recomp", diff: "Intermediate", goal: "Build muscle, burn fat", img: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=800&q=80&fit=crop&crop=faces" },
 ];
+// ── Hero images per gender + program slug ──
 const HERO: Record<string, Record<string, string>> = {
-  w: { wl: "https://images.unsplash.com/photo-1549570652-97324981a6fd?w=1200&q=80", mb: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=1200&q=80", st: "https://images.unsplash.com/photo-1518310383802-640c2de311b2?w=1200&q=80", en: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1200&q=80", fl: "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=1200&q=80", br: "https://images.unsplash.com/photo-1594737625785-a6cbdabd333c?w=1200&q=80" },
-  m: { wl: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=1200&q=80", mb: "https://images.unsplash.com/photo-1599058917212-d750089bc07e?w=1200&q=80", st: "https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=1200&q=80", en: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200&q=80", fl: "https://images.unsplash.com/photo-1517964603305-11c0f6f66012?w=1200&q=80", br: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=1200&q=80" },
+  w: { wl: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&q=80&fit=crop&crop=faces", mb: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=1200&q=80&fit=crop&crop=faces", st: "https://images.unsplash.com/photo-1574680178050-55c6a6a96e0a?w=1200&q=80&fit=crop&crop=faces", en: "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=1200&q=80&fit=crop&crop=faces", fl: "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=1200&q=80&fit=crop&crop=faces", br: "https://images.unsplash.com/photo-1599058917212-d750089bc07e?w=1200&q=80&fit=crop&crop=faces" },
+  m: { wl: "https://images.unsplash.com/photo-1549060279-7e168fcee0c2?w=1200&q=80&fit=crop&crop=faces", mb: "https://images.unsplash.com/photo-1583454155184-870a1f63aebc?w=1200&q=80&fit=crop&crop=faces", st: "https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=1200&q=80&fit=crop&crop=faces", en: "https://images.unsplash.com/photo-1556746834-1cb5b8fabd54?w=1200&q=80&fit=crop&crop=faces", fl: "https://images.unsplash.com/photo-1607962837359-5e7e89f86776?w=1200&q=80&fit=crop&crop=faces", br: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=1200&q=80&fit=crop&crop=faces" },
 };
 
 /* ── Weekly variation ── */
@@ -140,8 +143,8 @@ function S1({ onChoose }: { onChoose: (g: G) => void }) {
         <p style={{ color: "#9ca3af", marginTop: "0.75rem" }}>Choose to see programs personalised for your goals</p>
       </div>
       <div className="hg" style={{ display: "grid", gridTemplateColumns: "1fr", minHeight: "75vh" }}>
-        <HC img="https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=1200&q=80" title="I'm a Woman" sub="Programs designed for female physiology & goals" onClick={() => onChoose("w")} aria="Select women's programs" />
-        <HC img="https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=1200&q=80" title="I'm a Man" sub="Programs built for male performance & strength" onClick={() => onChoose("m")} aria="Select men's programs" />
+        <HC img="https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=1200&q=80&fit=crop&crop=faces" title="I'm a Woman" sub="Programs designed for female physiology & goals" onClick={() => onChoose("w")} aria="Select women's programs" />
+        <HC img="https://images.unsplash.com/photo-1583454155184-870a1f63aebc?w=1200&q=80&fit=crop&crop=faces" title="I'm a Man" sub="Programs built for male performance & strength" onClick={() => onChoose("m")} aria="Select men's programs" />
       </div>
       <style>{`@media(min-width:768px){.hg{grid-template-columns:1fr 1fr!important}}`}</style>
     </section>

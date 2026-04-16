@@ -5,15 +5,15 @@ const PFX = "https://images.unsplash.com/";
 const SFX = "?w=400&q=80";
 
 const IMGS: Record<string, string> = {
-  sq: "photo-1567598508481-65985588e295",
-  dl: "photo-1598971639058-fab3c3109a37",
-  ub: "photo-1571019613454-1cb2f99b2d8b",
-  bk: "photo-1526506118085-60ce8714f8c5",
-  co: "photo-1518611012118-696072aa579a",
-  rn: "photo-1461896836934-ffe607ba8211",
-  gl: "photo-1574680096145-d05b474e2155",
-  sh: "photo-1583454155184-870a1f63aebc",
-  fx: "photo-1518310383802-640c2de311b2",
+  sq: "photo-1552673597-e3cd6747a996",
+  dl: "photo-1526506118085-60ce8714f8c5",
+  ub: "photo-1583454155184-870a1f63aebc",
+  bk: "photo-1599058917212-d750089bc07e",
+  co: "photo-1571019614242-c5c5dee9f50b",
+  rn: "photo-1534438327276-14e5300c3a48",
+  gl: "photo-1544016768-77a6e4c6f68b",
+  sh: "photo-1574680096145-d05b474e2155",
+  fx: "photo-1518611012118-696072aa579a",
   kb: "photo-1607962837359-5e7e89f86776",
 };
 
