@@ -1,12 +1,29 @@
 @import "tailwindcss";
 
+/* ══════════════════════════════════════════════════════════
+   DESIGN TOKENS
+══════════════════════════════════════════════════════════ */
 :root {
   --background: #0a0a0a;
   --foreground: #ffffff;
+  --color-bg: #0a0a0a;
+  --color-primary: #a3e635;
   --font-display: "Bebas Neue", sans-serif;
   --font-body: "Inter", sans-serif;
   --accent: #a3e635;
   --accent-glow: rgba(163, 230, 53, 0.35);
+
+  /* Shadow scale */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.55), 0 0 40px rgba(163, 230, 53, 0.18);
+
+  /* Timing constants */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-expo: cubic-bezier(0.4, 0, 1, 1);
+  --ease-hover: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-entry: 360ms cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit: 200ms cubic-bezier(0.4, 0, 1, 1);
 }
 
 @theme inline {
@@ -15,25 +32,25 @@
   --font-sans: var(--font-body);
 }
 
+/* ══════════════════════════════════════════════════════════
+   BASE
+══════════════════════════════════════════════════════════ */
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-body), Arial, Helvetica, sans-serif;
 }
 
-h1,
-h2,
-h3,
-h4 {
+h1, h2, h3, h4 {
   font-family: var(--font-display), Impact, "Arial Narrow Bold", sans-serif;
   letter-spacing: 0.05em;
 }
 
-html {
-  scroll-behavior: smooth;
-}
+html { scroll-behavior: smooth; }
 
-/* ── Gradient text utility ── */
+/* ══════════════════════════════════════════════════════════
+   GRADIENT TEXT UTILITIES
+══════════════════════════════════════════════════════════ */
 .gradient-text {
   background: linear-gradient(135deg, #a3e635 0%, #84cc16 50%, #65a30d 100%);
   -webkit-background-clip: text;
@@ -48,95 +65,144 @@ html {
   background-clip: text;
 }
 
-/* ── Hero fade-in + slide-up ── */
+/* ══════════════════════════════════════════════════════════
+   @keyframes — HERO ENTRANCE
+══════════════════════════════════════════════════════════ */
 @keyframes heroSlideUp {
-  from {
-    opacity: 0;
-    transform: translateY(32px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(32px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes heroFadeIn {
   from { opacity: 0; }
-  to { opacity: 1; }
+  to   { opacity: 1; }
 }
 
-@keyframes countUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+/* ══════════════════════════════════════════════════════════
+   @keyframes — SCROLL REVEAL (clip-path, no translateY)
+══════════════════════════════════════════════════════════ */
+@keyframes fadeInReveal {
+  from {
+    opacity: 0;
+    clip-path: inset(100% 0 0 0);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0% 0 0 0);
+  }
 }
 
-@keyframes borderGlow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(163, 230, 53, 0); }
-  50% { box-shadow: 0 0 28px 4px rgba(163, 230, 53, 0.18); }
+@keyframes fadeInSimple {
+  from { opacity: 0; clip-path: inset(30% 0 0 0); }
+  to   { opacity: 1; clip-path: inset(0% 0 0 0); }
 }
 
-@keyframes navUnderline {
-  from { width: 0; }
-  to { width: 100%; }
+/* ══════════════════════════════════════════════════════════
+   @keyframes — GRADIENT BORDER SPIN (@property)
+══════════════════════════════════════════════════════════ */
+@property --gradient-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
 }
 
+@keyframes spin-border {
+  to { --gradient-angle: 360deg; }
+}
+
+/* ══════════════════════════════════════════════════════════
+   @keyframes — MISC
+══════════════════════════════════════════════════════════ */
 @keyframes floatBadge {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-4px); }
+  50%       { transform: translateY(-4px); }
 }
 
 @keyframes shimmer {
-  0% { background-position: -200% center; }
+  0%   { background-position: -200% center; }
   100% { background-position: 200% center; }
 }
 
-/* ── Animation classes ── */
+@keyframes bounceDot {
+  0%, 80%, 100% { transform: translateY(0); }
+  40%           { transform: translateY(-8px); }
+}
+
+/* ══════════════════════════════════════════════════════════
+   HERO ENTRANCE ANIMATION CLASSES
+══════════════════════════════════════════════════════════ */
 .anim-hero-badge {
-  animation: heroSlideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: heroSlideUp var(--ease-entry) both;
   animation-delay: 0.1s;
 }
-
 .anim-hero-title {
-  animation: heroSlideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: heroSlideUp var(--ease-entry) both;
   animation-delay: 0.25s;
 }
-
 .anim-hero-subtitle {
-  animation: heroSlideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: heroSlideUp var(--ease-entry) both;
   animation-delay: 0.4s;
 }
-
 .anim-hero-cta {
-  animation: heroSlideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: heroSlideUp var(--ease-entry) both;
   animation-delay: 0.55s;
 }
-
 .anim-hero-image {
   animation: heroFadeIn 1s ease both;
 }
 
-/* ── Card scroll reveal ── */
+/* ══════════════════════════════════════════════════════════
+   SCROLL-DRIVEN REVEAL — CSS animation-timeline: view()
+   No JS, no translateY (prevents layout shift)
+══════════════════════════════════════════════════════════ */
+.fade-in {
+  animation: fadeInSimple var(--ease-entry) both;
+  animation-timeline: view();
+  animation-range: entry 0% entry 60%;
+}
+
+.reveal-up {
+  animation: fadeInReveal var(--ease-entry) both;
+  animation-timeline: view();
+  animation-range: entry 0% entry 70%;
+}
+
+/* Staggered children — each .stagger-N child gets delay */
+.stagger-1 { animation-delay: 0ms;  }
+.stagger-2 { animation-delay: 50ms; }
+.stagger-3 { animation-delay: 100ms;}
+.stagger-4 { animation-delay: 150ms;}
+.stagger-5 { animation-delay: 200ms;}
+.stagger-6 { animation-delay: 250ms;}
+
+/* ── Legacy Intersection-Observer fallback (JS adds is-visible) ── */
 .reveal-card {
   opacity: 0;
-  transform: translateY(24px);
-  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  clip-path: inset(20% 0 0 0);
+  transition: opacity 0.6s var(--ease-out-expo),
+              clip-path 0.6s var(--ease-out-expo);
 }
-
 .reveal-card.is-visible {
   opacity: 1;
-  transform: translateY(0);
+  clip-path: inset(0% 0 0 0);
 }
 
-/* ── Stagger delays for grid items ── */
-.stagger-1 { transition-delay: 0.05s; }
-.stagger-2 { transition-delay: 0.12s; }
-.stagger-3 { transition-delay: 0.19s; }
-.stagger-4 { transition-delay: 0.26s; }
-.stagger-5 { transition-delay: 0.33s; }
-.stagger-6 { transition-delay: 0.4s; }
+/* ══════════════════════════════════════════════════════════
+   GRADIENT BORDER (CTA / Hero buttons)
+   Requires @property --gradient-angle above
+══════════════════════════════════════════════════════════ */
+.gradient-border {
+  --gradient-angle: 0deg;
+  border: 2px solid transparent;
+  background:
+    linear-gradient(var(--color-bg), var(--color-bg)) padding-box,
+    linear-gradient(var(--gradient-angle), var(--color-primary), #4f98a3, var(--color-primary)) border-box;
+  animation: spin-border 4s linear infinite;
+}
 
-/* ── Nav link underline animation ── */
+/* ══════════════════════════════════════════════════════════
+   NAV LINK — animated underline slide
+══════════════════════════════════════════════════════════ */
 .nav-link {
   position: relative;
 }
@@ -148,36 +214,54 @@ html {
   width: 0;
   height: 2px;
   background: #a3e635;
-  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: width var(--ease-hover);
 }
-.nav-link:hover::after {
-  width: 100%;
-}
+.nav-link:hover::after { width: 100%; }
 
-/* ── Button glow ── */
+/* ══════════════════════════════════════════════════════════
+   BUTTONS — hover lift + active press (physical feedback)
+══════════════════════════════════════════════════════════ */
 .btn-primary {
   position: relative;
   overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition:
+    transform var(--ease-hover),
+    box-shadow var(--ease-hover);
 }
 .btn-primary:hover {
   transform: translateY(-2px);
   box-shadow: 0 0 32px var(--accent-glow), 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 .btn-primary:active {
-  transform: translateY(0);
+  transform: translateY(1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-/* ── Program card premium hover ── */
+.btn-secondary {
+  transition:
+    transform var(--ease-hover),
+    border-color var(--ease-hover),
+    color var(--ease-hover);
+}
+.btn-secondary:hover  { transform: translateY(-2px); }
+.btn-secondary:active { transform: translateY(1px); }
+
+/* ══════════════════════════════════════════════════════════
+   PROGRAM / STANDARD CARDS — hover lift + shadow
+══════════════════════════════════════════════════════════ */
 .prog-card {
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
+  transition:
+    transform var(--ease-hover),
+    box-shadow var(--ease-hover);
 }
 .prog-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 0 40px rgba(163, 230, 53, 0.22),
-              0 20px 60px rgba(0, 0, 0, 0.5);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
 }
+.prog-card:active { transform: translateY(-1px); }
+
+/* Shimmer overlay on hover */
 .prog-card::before {
   content: "";
   position: absolute;
@@ -185,29 +269,111 @@ html {
   border-radius: inherit;
   background: linear-gradient(135deg, rgba(163, 230, 53, 0.08), transparent);
   opacity: 0;
-  transition: opacity 0.4s ease;
+  transition: opacity var(--ease-hover);
   pointer-events: none;
   z-index: 0;
 }
-.prog-card:hover::before {
-  opacity: 1;
+.prog-card:hover::before { opacity: 1; }
+
+/* ══════════════════════════════════════════════════════════
+   3D CARD EFFECT
+   JS on mousemove adds inline --rx / --ry CSS vars
+══════════════════════════════════════════════════════════ */
+.card-3d {
+  transform-style: preserve-3d;
+  perspective: 1000px;
+  transition:
+    transform var(--ease-hover),
+    box-shadow var(--ease-hover);
+  will-change: transform;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+}
+.card-3d:hover {
+  box-shadow: var(--shadow-lg);
+}
+/* Lift inner content slightly in 3D space */
+.card-3d-inner {
+  transform: translateZ(8px);
+  transition: transform var(--ease-hover);
 }
 
-/* ── Stat count-up animation ── */
+/* ══════════════════════════════════════════════════════════
+   HERO IMAGE — subtle 3D tilt
+══════════════════════════════════════════════════════════ */
+.hero-img-tilt {
+  transform: perspective(800px) rotateY(-3deg) rotateX(1deg);
+  transition: transform 0.6s var(--ease-out-expo);
+}
+.hero-img-tilt:hover {
+  transform: perspective(800px) rotateY(0deg) rotateX(0deg);
+}
+
+/* Feature screenshot 3D perspective */
+.feature-screenshot {
+  transform: perspective(800px) rotateY(-5deg);
+  transition: transform 0.5s var(--ease-out-expo);
+}
+.feature-screenshot:hover {
+  transform: perspective(800px) rotateY(0deg);
+}
+
+/* ══════════════════════════════════════════════════════════
+   STAT CARDS — count-up reveal
+══════════════════════════════════════════════════════════ */
+@keyframes statReveal {
+  from { opacity: 0; transform: translateY(16px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .stat-visible {
-  animation: countUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: statReveal 0.45s var(--ease-out-expo) both;
 }
 
+/* ══════════════════════════════════════════════════════════
+   MODAL / DIALOG — @starting-style entrance
+══════════════════════════════════════════════════════════ */
+dialog[open] {
+  opacity: 1;
+  transform: scale(1);
+  transition:
+    opacity 0.3s var(--ease-out-expo),
+    transform 0.3s var(--ease-out-expo);
+
+  @starting-style {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+/* video modal overlay */
+.fc-video-modal {
+  opacity: 1;
+  transform: scale(1);
+  transition:
+    opacity 0.3s var(--ease-out-expo),
+    transform 0.3s var(--ease-out-expo);
+}
+.fc-video-modal.entering {
+  animation: fcModalIn 0.35s var(--ease-out-expo) both;
+}
+@keyframes fcModalIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ══════════════════════════════════════════════════════════
+   SCROLL INDICATOR — bounce
+══════════════════════════════════════════════════════════ */
+.scroll-bounce {
+  animation: bounceDot 2s ease-in-out infinite;
+}
+
+/* ══════════════════════════════════════════════════════════
+   PRINT STYLES
+══════════════════════════════════════════════════════════ */
 @media print {
-  .no-print {
-    display: none !important;
-  }
-
-  body {
-    background: #fff !important;
-    color: #000 !important;
-  }
-
+  .no-print { display: none !important; }
+  body { background: #fff !important; color: #000 !important; }
   .exercise-content {
     max-height: none !important;
     opacity: 1 !important;
@@ -216,22 +382,22 @@ html {
   }
 }
 
-/* ── Respect user motion preferences ── */
+/* ══════════════════════════════════════════════════════════
+   REDUCED MOTION — respect user preferences
+   Must be last to override everything above
+══════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    animation-timeline: auto !important;
   }
+  html { scroll-behavior: auto; }
 
-  html {
-    scroll-behavior: auto;
-  }
-
-  .reveal-card {
-    opacity: 1;
-    transform: none;
-  }
+  .reveal-card { opacity: 1; clip-path: none; }
+  .fade-in     { opacity: 1; clip-path: none; animation: none; }
+  .reveal-up   { opacity: 1; clip-path: none; animation: none; }
+  .card-3d     { transform: none !important; }
+  .gradient-border { animation: none; border-color: var(--color-primary); }
 }

@@ -1,7 +1,61 @@
 "use client";
 
-import { useEffect, useCallback, useMemo, useRef, useState } from "react";
+import { useEffect, useCallback, useRef, useState } from "react";
 import Link from "next/link";
+
+/* ── Motion.js global type (loaded via CDN) ── */
+declare global {
+  interface Window {
+    Motion?: {
+      animate: (
+        el: Element | Element[],
+        keyframes: Record<string, unknown>,
+        options?: Record<string, unknown>
+      ) => void;
+    };
+  }
+}
+
+/* ── Button click pulse via Motion.js ── */
+function useMotionPulse() {
+  return useCallback((el: HTMLElement | null) => {
+    if (!el || !window.Motion) return;
+    window.Motion.animate(
+      el,
+      { scale: [1, 0.95, 1.02, 1] } as Record<string, unknown>,
+      { duration: 0.3, easing: "ease-out" }
+    );
+  }, []);
+}
+
+/* ── 3D card tilt on mousemove ── */
+function use3DTilt(maxDeg = 10) {
+  const ref = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const onMove = (e: MouseEvent) => {
+      const rect = el.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width  - 0.5;
+      const y = (e.clientY - rect.top)  / rect.height - 0.5;
+      el.style.setProperty("--ry", `${(x * maxDeg).toFixed(2)}deg`);
+      el.style.setProperty("--rx", `${(-y * maxDeg).toFixed(2)}deg`);
+      el.style.transform = `rotateX(${(-y * maxDeg).toFixed(2)}deg) rotateY(${(x * maxDeg).toFixed(2)}deg)`;
+    };
+    const onLeave = () => {
+      el.style.setProperty("--ry", "0deg");
+      el.style.setProperty("--rx", "0deg");
+      el.style.transform = "rotateX(0deg) rotateY(0deg)";
+    };
+    el.addEventListener("mousemove", onMove);
+    el.addEventListener("mouseleave", onLeave);
+    return () => {
+      el.removeEventListener("mousemove", onMove);
+      el.removeEventListener("mouseleave", onLeave);
+    };
+  }, [maxDeg]);
+  return ref;
+}
 
 /* ── Brand Logo ─────────────────────────────────────────── */
 function BrandLogo() {
@@ -277,6 +331,15 @@ export default function Home() {
   const testimonialsReveal = useReveal();
   const methodReveal = useReveal();
 
+  /* 3D tilt refs for feature sections */
+  const tilt3dWomen = use3DTilt(6);
+  const tilt3dMen   = use3DTilt(6);
+
+  /* Motion.js button pulse */
+  const pulse = useMotionPulse();
+  const ctaRef    = useRef<HTMLAnchorElement>(null);
+  const navCtaRef = useRef<HTMLAnchorElement>(null);
+
   /* ── Auto-advance hero ── */
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -359,11 +422,13 @@ export default function Home() {
               ))}
             </ul>
             <a
-              href="/programs"
-              className="btn-primary rounded-full bg-[#a3e635] px-5 py-2 text-sm font-bold text-[#0a0a0a]"
-            >
-              Start Free
-            </a>
+            ref={navCtaRef}
+            href="/programs"
+            onClick={() => pulse(navCtaRef.current)}
+            className="btn-primary gradient-border rounded-full px-5 py-2 text-sm font-bold text-[#a3e635]"
+          >
+            Start Free
+          </a>
           </div>
           <button
             className="rounded-md border border-white/20 p-2 text-white transition-colors hover:border-[#a3e635] md:hidden"
@@ -460,15 +525,17 @@ export default function Home() {
             </p>
             <div className="anim-hero-cta mt-10 flex flex-wrap items-center gap-4">
               <a
+                ref={ctaRef}
                 href="/programs"
-                className="btn-primary rounded-full bg-[#a3e635] px-8 py-3 text-base font-bold text-[#0a0a0a]"
+                onClick={() => pulse(ctaRef.current)}
+                className="btn-primary gradient-border rounded-full px-8 py-3 text-base font-bold text-[#a3e635]"
               >
                 START FREE PROGRAM
               </a>
               <button
                 onClick={() => setIsVideoOpen(true)}
                 aria-label="Watch how FitConMi works"
-                className="flex items-center gap-2 rounded-full border border-white/40 bg-black/25 px-8 py-3 text-base font-semibold text-white backdrop-blur-sm transition-all duration-300 hover:border-[#a3e635] hover:text-[#a3e635]"
+                className="btn-secondary flex items-center gap-2 rounded-full border border-white/40 bg-black/25 px-8 py-3 text-base font-semibold text-white backdrop-blur-sm hover:border-[#a3e635] hover:text-[#a3e635]"
               >
                 <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true">
                   <path d="M8 5v14l11-7z"/>
@@ -482,7 +549,8 @@ export default function Home() {
           <a
             href="#stats"
             aria-label="Scroll to stats section"
-            className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce text-white/60 transition-colors duration-300 hover:text-[#a3e635]"
+            className="scroll-bounce absolute bottom-8 left-1/2 -translate-x-1/2 text-white/60 transition-colors hover:text-[#a3e635]"
+            style={{ transitionDuration: "180ms" }}
           >
             <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
               <path d="M19 9l-7 7-7-7" strokeLinecap="round" strokeLinejoin="round"/>
@@ -517,7 +585,7 @@ export default function Home() {
             {stats.map((stat, idx) => (
               <article
                 key={stat.label}
-                className={`rounded-xl border border-white/10 bg-[#1a1a1a] p-5 transition-all duration-300 hover:border-[#a3e635] hover:shadow-[0_0_24px_rgba(163,230,53,0.18)] ${
+                className={`prog-card card-3d rounded-xl border border-white/10 bg-[#1a1a1a] p-5 hover:border-[#a3e635] ${
                   statsVisible ? "stat-visible" : "opacity-0"
                 }`}
                 style={statsVisible ? { animationDelay: `${idx * 0.1}s` } : {}}
@@ -538,11 +606,11 @@ export default function Home() {
             src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=80&fit=crop&crop=center"
             alt="Man and woman training together intensely in gym, representing the FitConMi community"
             loading="lazy"
-            className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
+            className="hero-img-tilt h-full w-full object-cover"
           />
           <div className="absolute inset-0 bg-black/60" />
           <div className="absolute inset-0 flex items-center justify-center px-4 text-center">
-            <div>
+            <div className="reveal-up">
               <h2 className="gradient-text text-5xl sm:text-7xl">
                 YOUR JOURNEY STARTS TODAY
               </h2>
@@ -572,7 +640,7 @@ export default function Home() {
           <div className="pointer-events-none absolute inset-0 bg-[#0a0a0a]/80" aria-hidden="true" />
 
           <div ref={programsReveal.ref} className="relative">
-            <div className="text-center">
+            <div className="text-center fade-in">
               <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#a3e635]">
                 Science-Backed Plans
               </p>
@@ -585,7 +653,7 @@ export default function Home() {
               {programs.map((program, idx) => (
                 <article
                   key={program.title}
-                  className={`prog-card reveal-card stagger-${idx + 1} group relative overflow-hidden rounded-2xl border border-white/10 bg-[#111111] ${
+                  className={`prog-card card-3d reveal-card stagger-${idx + 1} group relative overflow-hidden rounded-2xl border border-white/10 bg-[#111111] ${
                     programsReveal.visible ? "is-visible" : ""
                   }`}
                 >
@@ -600,7 +668,7 @@ export default function Home() {
                     <div className="absolute inset-0 bg-gradient-to-t from-[#111111] via-black/30 to-transparent" />
                   </div>
 
-                  <div className="relative z-10 p-8">
+                  <div className="card-3d-inner relative z-10 p-8">
                     <div className="flex items-center gap-3 text-[#a3e635]">
                       {program.icon}
                       <span className="text-xs font-bold uppercase tracking-[0.15em] text-[#a3e635]">
@@ -645,15 +713,18 @@ export default function Home() {
           className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-8 px-4 py-12 sm:px-6 lg:grid-cols-2 lg:px-8"
           aria-label="Women's fitness programs"
         >
-          <div className="overflow-hidden rounded-2xl">
+          <div
+            ref={tilt3dWomen as React.RefObject<HTMLDivElement>}
+            className="card-3d overflow-hidden rounded-2xl"
+          >
             <img
               src="https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&q=80&fit=crop&crop=faces"
               alt="Strong woman performing dumbbell strength training with intense focus in a professional gym"
               loading="lazy"
-              className="h-full min-h-[360px] w-full object-cover transition-transform duration-700 hover:scale-105"
+              className="feature-screenshot h-full min-h-[360px] w-full object-cover"
             />
           </div>
-          <article className="flex flex-col justify-center rounded-2xl bg-[#111111] p-8">
+          <article className="reveal-up flex flex-col justify-center rounded-2xl bg-[#111111] p-8">
             <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#a3e635]">
               For Women
             </p>
@@ -679,7 +750,7 @@ export default function Home() {
           className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-8 px-4 py-4 sm:px-6 lg:grid-cols-2 lg:px-8"
           aria-label="Men's fitness programs"
         >
-          <article className="flex flex-col justify-center rounded-2xl bg-[#111111] p-8 lg:order-1">
+          <article className="reveal-up flex flex-col justify-center rounded-2xl bg-[#111111] p-8 lg:order-1">
             <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#a3e635]">
               For Men
             </p>
@@ -698,12 +769,15 @@ export default function Home() {
               Explore Men's Programs
             </a>
           </article>
-          <div className="overflow-hidden rounded-2xl lg:order-2">
+          <div
+            ref={tilt3dMen as React.RefObject<HTMLDivElement>}
+            className="card-3d overflow-hidden rounded-2xl lg:order-2"
+          >
             <img
               src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80&fit=crop&crop=faces"
               alt="Muscular man training with heavy dumbbells showing impressive muscle definition and strength"
               loading="lazy"
-              className="h-full min-h-[360px] w-full object-cover transition-transform duration-700 hover:scale-105"
+              className="feature-screenshot h-full min-h-[360px] w-full object-cover"
             />
           </div>
         </section>
@@ -713,12 +787,14 @@ export default function Home() {
           className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8"
           aria-label="FitConMi community members"
         >
-          <h2 className="text-center text-5xl text-white sm:text-6xl">
-            THE FITCONMI COMMUNITY
-          </h2>
-          <p className="mt-3 text-center text-[#9ca3af]">
-            Real athletes. Real transformations. Real results.
-          </p>
+          <div className="fade-in text-center">
+            <h2 className="text-5xl text-white sm:text-6xl">
+              THE FITCONMI COMMUNITY
+            </h2>
+            <p className="mt-3 text-[#9ca3af]">
+              Real athletes. Real transformations. Real results.
+            </p>
+          </div>
           <div
             ref={communityReveal.ref}
             className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
@@ -726,7 +802,7 @@ export default function Home() {
             {communityImages.map((image, idx) => (
               <article
                 key={image.url}
-                className={`reveal-card stagger-${idx + 1} group relative overflow-hidden rounded-lg border border-white/10 transition-all duration-300 hover:border-[#a3e635] ${
+                className={`prog-card card-3d reveal-card stagger-${idx + 1} group relative overflow-hidden rounded-lg border border-white/10 hover:border-[#a3e635] ${
                   communityReveal.visible ? "is-visible" : ""
                 }`}
               >
@@ -749,7 +825,7 @@ export default function Home() {
           aria-label="The FitConMi training method"
         >
           <div ref={methodReveal.ref} className="mx-auto w-full max-w-7xl">
-            <div className="text-center">
+            <div className="fade-in text-center">
               <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#a3e635]">
                 Our Approach
               </p>
@@ -761,16 +837,18 @@ export default function Home() {
               {methodSteps.map((step, idx) => (
                 <article
                   key={step.title}
-                  className={`reveal-card stagger-${idx + 1} rounded-2xl border border-white/10 bg-[#1a1a1a] p-8 transition-all duration-300 hover:border-[#a3e635] hover:shadow-[0_0_24px_rgba(163,230,53,0.15)] ${
+                  className={`prog-card card-3d reveal-card stagger-${idx + 1} rounded-2xl border border-white/10 bg-[#1a1a1a] p-8 hover:border-[#a3e635] ${
                     methodReveal.visible ? "is-visible" : ""
                   }`}
                 >
-                  {step.icon}
-                  <p className="mt-4 text-xs font-bold uppercase tracking-[0.15em] text-[#a3e635]">
-                    Step {idx + 1}
-                  </p>
-                  <h3 className="mt-1 text-4xl text-white">{step.title}</h3>
-                  <p className="mt-3 text-[#9ca3af] leading-relaxed">{step.text}</p>
+                  <div className="card-3d-inner">
+                    {step.icon}
+                    <p className="mt-4 text-xs font-bold uppercase tracking-[0.15em] text-[#a3e635]">
+                      Step {idx + 1}
+                    </p>
+                    <h3 className="mt-1 text-4xl text-white">{step.title}</h3>
+                    <p className="mt-3 text-[#9ca3af] leading-relaxed">{step.text}</p>
+                  </div>
                 </article>
               ))}
             </div>
@@ -783,7 +861,7 @@ export default function Home() {
           aria-label="Science of training"
         >
           <div ref={scienceReveal.ref}>
-            <div className="text-center">
+            <div className="fade-in text-center">
               <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#a3e635]">
                 Evidence-Based
               </p>
@@ -795,13 +873,15 @@ export default function Home() {
               {scienceCards.map((card, idx) => (
                 <article
                   key={card.title}
-                  className={`reveal-card stagger-${idx + 1} rounded-2xl border border-white/10 bg-[#1a1a1a] p-8 transition-all duration-300 hover:border-[#a3e635] hover:shadow-[0_0_24px_rgba(163,230,53,0.12)] ${
+                  className={`prog-card card-3d reveal-card stagger-${idx + 1} rounded-2xl border border-white/10 bg-[#1a1a1a] p-8 hover:border-[#a3e635] ${
                     scienceReveal.visible ? "is-visible" : ""
                   }`}
                 >
-                  <div className="mb-4 h-1 w-12 rounded-full bg-[#a3e635]" />
-                  <h3 className="text-3xl text-white">{card.title}</h3>
-                  <p className="mt-4 text-[#9ca3af] leading-relaxed">{card.text}</p>
+                  <div className="card-3d-inner">
+                    <div className="mb-4 h-1 w-12 rounded-full bg-[#a3e635]" />
+                    <h3 className="text-3xl text-white">{card.title}</h3>
+                    <p className="mt-4 text-[#9ca3af] leading-relaxed">{card.text}</p>
+                  </div>
                 </article>
               ))}
             </div>
@@ -814,7 +894,7 @@ export default function Home() {
           aria-label="Member testimonials"
         >
           <div ref={testimonialsReveal.ref} className="mx-auto w-full max-w-7xl">
-            <div className="text-center">
+            <div className="fade-in text-center">
               <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#a3e635]">
                 Success Stories
               </p>
@@ -826,7 +906,7 @@ export default function Home() {
               {testimonials.map((t, idx) => (
                 <article
                   key={t.name}
-                  className={`reveal-card stagger-${idx + 1} relative rounded-2xl border border-white/10 bg-[#1a1a1a] p-8 transition-all duration-300 hover:border-[#a3e635] hover:shadow-[0_0_28px_rgba(163,230,53,0.15)] ${
+                  className={`prog-card reveal-card stagger-${idx + 1} relative rounded-2xl border border-white/10 bg-[#1a1a1a] p-8 hover:border-[#a3e635] ${
                     testimonialsReveal.visible ? "is-visible" : ""
                   }`}
                 >
@@ -864,20 +944,22 @@ export default function Home() {
         >
           <div className="pointer-events-none absolute -top-20 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-[#a3e635]/10 blur-3xl" aria-hidden="true" />
           <div className="mx-auto flex w-full max-w-4xl flex-col items-center text-center">
-            <h2 className="text-5xl text-white sm:text-6xl">
-              Ready to{" "}
-              <span className="gradient-text">Transform</span>{" "}
-              Your Body?
-            </h2>
-            <p className="mt-4 max-w-lg text-lg text-[#9ca3af]">
-              Join 10,000+ athletes. No gym membership required. Your personalized plan starts free.
-            </p>
-            <a
-              href="/programs"
-              className="btn-primary mt-8 rounded-full bg-[#a3e635] px-10 py-4 text-lg font-bold text-[#0a0a0a]"
-            >
-              Get Started Free →
-            </a>
+            <div className="reveal-up">
+              <h2 className="text-5xl text-white sm:text-6xl">
+                Ready to{" "}
+                <span className="gradient-text">Transform</span>{" "}
+                Your Body?
+              </h2>
+              <p className="mt-4 max-w-lg text-lg text-[#9ca3af]">
+                Join 10,000+ athletes. No gym membership required. Your personalized plan starts free.
+              </p>
+              <a
+                href="/programs"
+                className="btn-primary gradient-border mt-8 inline-block rounded-full px-10 py-4 text-lg font-bold text-[#a3e635]"
+              >
+                Get Started Free →
+              </a>
+            </div>
           </div>
         </section>
 

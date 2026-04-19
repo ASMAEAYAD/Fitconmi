@@ -121,6 +121,11 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+        {/* Motion.js — for click/interaction animations */}
+        <script
+          src="https://cdn.jsdelivr.net/npm/motion@latest/dist/motion.js"
+          async
+        />
       </head>
       <body className="min-h-full flex flex-col">
         {children}
