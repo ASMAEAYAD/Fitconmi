@@ -728,6 +728,32 @@ export const PROG_DATA: Record<string, Record<string, Record<number, DayD>>> = {
           "Pigeon Pose PNF (External Rotation — 60–90 sec)",
         ]
       ),
+      5: makeDay("Interval Cardio + Core Finisher", "wl", "w",
+        [
+          "Assault Bike Sprint (45-sec Max Effort)",
+          "Jump Rope Double-Under (1-min AMRAP)",
+          "Mountain Climbers (Alternating — Explosive)",
+          "Burpee (Full ROM — 10-sec Rest)",
+          "Plank (Active — Glutes Squeezed)|60s",
+          "Side Plank (Hip Elevated — Abduction)|45s each",
+        ],
+        [
+          "Assault Bike Sprint (45-sec Max Effort)",
+          "Jump Rope Double-Under (1-min AMRAP)",
+          "Battle Rope Alternating Wave (40-sec Work)",
+          "Box Jump (Maximal Height — Soft Landing)",
+          "Ab Wheel Rollout (Kneeling — Full Extension)|8",
+          "Dead Bug (Contralateral Limb Extension)|10 each",
+        ],
+        [
+          "Assault Bike Sprint (45-sec Max Effort)",
+          "Jump Rope Double-Under (1-min AMRAP)",
+          "Barbell Thruster (Squat-to-Press)|8",
+          "Battle Rope Alternating Wave (40-sec Work)",
+          "Ab Wheel Rollout (Kneeling — Full Extension)|10",
+          "Sprint Interval (20m — Maximum Acceleration)",
+        ]
+      ),
     },
 
     // ── W · MUSCLE BUILDING — Hypertrophy (Schoenfeld 2010 + Progressive Overload) ──
@@ -834,6 +860,32 @@ export const PROG_DATA: Record<string, Record<string, Record<number, DayD>>> = {
           "Dumbbell Arnold Press (Full Rotation)",
           "Ab Wheel Rollout (Kneeling — Full Extension)",
           "Kettlebell Swing (Hip-Hinge Explosive)",
+        ]
+      ),
+      5: makeDay("Arms + Core (Accessory Volume)", "mb", "w",
+        [
+          "Preacher Curl (EZ-Bar — Slow Positive)",
+          "Incline Dumbbell Curl (30-sec Eccentric Hold)",
+          "Cable Tricep Pushdown (Rope — Flare Out)",
+          "Overhead Tricep Extension (Cable — Long Head)",
+          "Hanging Knee Raise (Controlled ROT)",
+          "Plank (Active — Glutes Squeezed)|60s",
+        ],
+        [
+          "Hammer Curl (Cross-Body Variation)",
+          "Preacher Curl (EZ-Bar — Slow Positive)",
+          "EZ-Bar Skull Crusher (Long Head Focus)",
+          "Overhead Tricep Extension (Cable — Long Head)",
+          "Ab Wheel Rollout (Kneeling — Full Extension)|8",
+          "Side Plank (Hip Elevated — Abduction)|45s each",
+        ],
+        [
+          "Incline Dumbbell Curl (30-sec Eccentric Hold)",
+          "Hammer Curl (Cross-Body Variation)",
+          "Close-Grip Bench Press (Tricep Focus)|8",
+          "Cable Tricep Pushdown (Rope — Flare Out)",
+          "Ab Wheel Rollout (Kneeling — Full Extension)|10",
+          "Hanging Knee Raise (Controlled ROT)|15",
         ]
       ),
     },
@@ -1498,6 +1550,32 @@ export const PROG_DATA: Record<string, Record<string, Record<number, DayD>>> = {
           "Overhead Tricep Extension (Cable — Long Head)",
           "Close-Grip Bench Press (Tricep Focus)|6",
           "Ab Wheel Rollout (Kneeling — Full Extension)",
+        ]
+      ),
+      6: makeDay("Full Body Power + Finisher", "mb", "m",
+        [
+          "Barbell Back Squat (High Bar)|5 @ 70% finisher",
+          "Pull-Up (Pronated Grip — Full ROM)|3×AMRAP",
+          "Dumbbell Arnold Press (Full Rotation)",
+          "Goblet Squat (Dumbbell)|15 metabolic",
+          "ab Wheel Rollout (Kneeling — Full Extension)|10",
+          "Face Pull (Rope — External Rotation)|20",
+        ],
+        [
+          "Barbell Back Squat (High Bar)|4×8 moderate",
+          "Barbell Bent-Over Row (Overhand Grip — 45°)|4×8",
+          "Incline Dumbbell Press (30° — 2-sec Eccentric)",
+          "Bulgarian Split Squat (Rear-Foot Elevated)|3×8 each",
+          "Cable Tricep Pushdown (Rope — Flare Out)|15",
+          "Plank (Active — Glutes Squeezed)|60s",
+        ],
+        [
+          "Conventional Deadlift (Braced Spine)|3×5 @ 75%",
+          "Pull-Up (Pronated Grip — Full ROM)|3×8",
+          "Overhead Press (Barbell — Strict)|3×8",
+          "Cable Chest Fly (Mid-Cable)|15 isolation",
+          "EZ-Bar Skull Crusher (Long Head Focus)|12 finisher",
+          "Hanging Knee Raise (Controlled ROT)|15",
         ]
       ),
     },

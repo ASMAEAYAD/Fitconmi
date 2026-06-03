@@ -73,17 +73,47 @@ function buildSch(slug: string, g: Gender, days: Days) {
   return out;
 }
 
-import { PROG_DATA, Exd } from "../programs/data";
+import { PROG_DATA, Exd, DayD } from "../programs/data";
 
-function getExercises(slug: string, g: Gender): Exd[] {
+// Maps UI-facing program slugs → PROG_DATA internal keys
+const SLUG_TO_KEY: Record<string, string> = {
+  "weight-loss":       "wl",
+  "muscle-building":   "mb",
+  "strength-training": "st",
+  "endurance":         "en",
+  "flexibility":       "fl",
+  "body-recomposition":"br",
+};
+
+/**
+ * Returns the DayD objects for each training day (1..days).
+ * Phase A is always used for the exercise list (foundation phase).
+ * Falls back gracefully if a day index is missing.
+ */
+function getDayPlans(slug: string, g: Gender, days: number): DayD[] {
   const genderKey = g === "woman" ? "w" : "m";
-  const pData = PROG_DATA[genderKey]?.[slug];
+  const progKey   = SLUG_TO_KEY[slug] ?? slug;
+  const pData     = PROG_DATA[genderKey]?.[progKey];
+
   if (!pData) {
-    // Basic fallback if slug is unmatched
-    return PROG_DATA["m"]["st"][1].exercises.A;
+    // Absolute fallback — return day 1 of men's strength
+    const fb = PROG_DATA["m"]?.["st"];
+    return fb ? [fb[1]] : [];
   }
-  // Return Day 1 Phase A exercises
-  return pData[1].exercises.A;
+
+  const result: DayD[] = [];
+  for (let d = 1; d <= days; d++) {
+    const dayData = pData[d];
+    if (dayData) {
+      result.push(dayData);
+    } else {
+      // Wrap-around: reuse existing days if program has fewer days than requested
+      const available = Object.keys(pData).map(Number).sort((a, b) => a - b);
+      const idx = (d - 1) % available.length;
+      result.push(pData[available[idx]]);
+    }
+  }
+  return result;
 }
 
 const MILE_W = ["💪 Adaptation — your body is calibrating. Soreness is growth.", "🔥 Progression — energy is up, strength is climbing, clothes fit differently.", "✨ Transformation — visible results, unshakeable habits, unstoppable confidence."];
@@ -243,10 +273,11 @@ function ProgramDetail({ prog, gender, dur, onBack }: { prog: Prog; gender: Gend
   const isW = gender === "woman";
   const sci = SCIENCE[prog.slug] ?? SCIENCE["muscle-building"];
   const schedule = buildSch(prog.slug, gender, dur.days);
-  const exs = getExercises(prog.slug, gender);
+  const dayPlans = getDayPlans(prog.slug, gender, dur.days);
   const miles = isW ? MILE_W : MILE_M;
   const nutr = getNutr(prog.slug, gender);
   const heroImg = progImg(prog.slug, gender);
+  const [activeDay, setActiveDay] = useState(0);
   const milePh: [string, string, string][] = [["Week 1–2", dur.weeks >= 12 ? "Week 3–6" : "Week 3–4", dur.weeks >= 8 ? `Week 7–${dur.weeks}` : "Week 7+"] as [string, string, string], miles as [string, string, string], miles as [string, string, string]];
 
   return (
@@ -305,11 +336,44 @@ function ProgramDetail({ prog, gender, dur, onBack }: { prog: Prog; gender: Gend
             </div>
           </section>
 
-          {/* Exercise Library */}
+          {/* Exercise Library — tabbed by day */}
           <section aria-label="Exercise library" style={{ background: "#111", border: "1px solid rgba(255,255,255,.08)", borderRadius: "1rem", padding: "1.75rem" }}>
             <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.4rem", color: "#a3e635", margin: "0 0 1rem", letterSpacing: "0.05em" }}>EXERCISE LIBRARY</h2>
+
+            {/* Day tabs */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1rem" }}>
+              {dayPlans.map((day, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActiveDay(i)}
+                  aria-label={`Day ${i + 1}: ${day.name}`}
+                  style={{
+                    background: activeDay === i ? "#a3e635" : "rgba(255,255,255,.06)",
+                    color: activeDay === i ? "#0a0a0a" : "#9ca3af",
+                    border: activeDay === i ? "1px solid #a3e635" : "1px solid rgba(255,255,255,.12)",
+                    borderRadius: "9999px",
+                    padding: "0.3rem 0.85rem",
+                    fontSize: "0.75rem",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    transition: "all 0.25s ease",
+                  }}
+                >
+                  Day {i + 1}
+                </button>
+              ))}
+            </div>
+
+            {/* Active day name */}
+            {dayPlans[activeDay] && (
+              <p style={{ color: "rgba(255,255,255,.5)", fontSize: "0.8rem", fontStyle: "italic", marginBottom: "0.75rem" }}>
+                {dayPlans[activeDay].name}
+              </p>
+            )}
+
+            {/* Exercises for the active day */}
             <div style={{ display: "flex", flexDirection: "column", gap: "0.9rem" }}>
-              {exs.map(ex => (
+              {(dayPlans[activeDay]?.exercises.A ?? []).map((ex: Exd) => (
                 <div key={ex.name} style={{ display: "flex", gap: "1rem", alignItems: "center", padding: "0.75rem", borderRadius: "0.75rem", background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.06)" }}>
                   <img src={ex.img} alt={ex.name} style={{ width: 64, height: 64, objectFit: "cover", borderRadius: "0.5rem", flexShrink: 0 }} />
                   <div style={{ flex: 1, minWidth: 0 }}>

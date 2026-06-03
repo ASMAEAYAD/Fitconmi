@@ -256,12 +256,23 @@ function S4({ prog, g, days, weeks, aDay, setADay, curWk, setCurWk, onBack }: { 
   const heroImg = HERO[g]?.[prog.slug] ?? prog.img;
   const progDays = PROG_DATA[g]?.[prog.slug] ?? {};
   const variation = getVariation(curWk);
-  const rawDay = progDays[aDay + 1];
+  // Wrap-around: if user selects more days than program has defined, cycle through available days
+  const availableDayKeys = Object.keys(progDays).map(Number).sort((a, b) => a - b);
+  const dayKeyIndex = availableDayKeys.length > 0 ? (aDay % availableDayKeys.length) : -1;
+  const resolvedDayKey = dayKeyIndex >= 0 ? availableDayKeys[dayKeyIndex] : aDay + 1;
+  const rawDay = progDays[resolvedDayKey];
   const dayName = rawDay?.name ?? "Training Day";
   const exMap = rawDay?.exercises ?? { A: [], B: [], C: [] };
   const dayExercises: Exd[] = (exMap as any)[variation] ?? exMap["A"] ?? [];
   const varInfo = VAR_LABEL[variation];
   const nutrIcons = NUTR_ICONS[`${g}-${prog.slug}`] ?? [["🥩", "Protein"], ["💧", "Hydration"], ["💤", "Recovery"]];
+
+  // Helper: resolve day name for any day index using wrap-around
+  const getDayName = (dayIdx: number): string => {
+    const ki = availableDayKeys.length > 0 ? (dayIdx % availableDayKeys.length) : -1;
+    const rk = ki >= 0 ? availableDayKeys[ki] : dayIdx + 1;
+    return progDays[rk]?.name ?? "Training Day";
+  };
 
   const switchDay = (i: number) => { setFadDay(true); setTimeout(() => { setADay(i); setFadDay(false); }, 200); };
   const switchWk = (w: number) => { setFadDay(true); setTimeout(() => { setCurWk(w); setFadDay(false); }, 200); };
@@ -309,7 +320,7 @@ function S4({ prog, g, days, weeks, aDay, setADay, curWk, setCurWk, onBack }: { 
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
               {Array.from({ length: days }).map((_, i) => {
                 const active = aDay === i;
-                const dName = progDays[i + 1]?.name ?? "Training Day";
+                const dName = getDayName(i);
                 return (
                   <button key={i} onClick={() => switchDay(i)} aria-label={`Day ${i + 1}: ${dName}`}
                     style={{ background: active ? "#a3e635" : "transparent", color: active ? "#0a0a0a" : "#9ca3af", borderRadius: "0.6rem", border: "none", padding: "0.65rem 0.75rem", cursor: "pointer", textAlign: "left", transition: "all 0.2s ease", display: "flex", flexDirection: "column", gap: "0.1rem" }}
@@ -348,7 +359,7 @@ function S4({ prog, g, days, weeks, aDay, setADay, curWk, setCurWk, onBack }: { 
             {Array.from({ length: days }).map((_, i) => {
               const active = aDay === i;
               return (
-                <button key={i} onClick={() => switchDay(i)} aria-label={`Day ${i + 1}: ${progDays[i + 1]?.name ?? "Training Day"}`}
+                <button key={i} onClick={() => switchDay(i)} aria-label={`Day ${i + 1}: ${getDayName(i)}`}
                   style={{ background: active ? "#a3e635" : "rgba(255,255,255,0.06)", color: active ? "#0a0a0a" : "#9ca3af", border: `1px solid ${active ? "#a3e635" : "rgba(255,255,255,0.1)"}`, borderRadius: "9999px", padding: "0.45rem 1rem", fontSize: "0.8rem", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0, transition: "all 0.2s ease" }}>
                   Day {i + 1}
                 </button>
